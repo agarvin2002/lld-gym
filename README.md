@@ -19,9 +19,12 @@ This is a self-contained study + practice setup covering everything you need for
 
 ## How to Use
 
-### 1. Install dependencies
+### 1. Clone and set up
 ```bash
+git clone https://github.com/agarvin2002/lld-gym.git
+cd lld-gym
 pip install -r requirements.txt
+bash setup_practice.sh   # prevents your starter.py edits from being tracked by git
 ```
 
 ### 2. Pick a module and start reading
