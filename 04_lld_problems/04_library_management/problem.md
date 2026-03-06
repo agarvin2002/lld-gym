@@ -90,3 +90,16 @@ record = library.borrow_book("M001", "978-0132350884")
 # Member returns
 library.return_book(record)
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Observer** | `ReservationQueue` notifies waiting members when a book is returned |
+| **Strategy** | `SearchStrategy` ABC — title, author, ISBN searches are interchangeable |
+| **SRP** | `Book` is data; `BookItem` tracks availability; `Library` orchestrates borrowing |
+| **OCP** | New search strategies extend `SearchStrategy` without modifying `Library` |
+
+**See also:** Module 03 → [Observer](../../03_design_patterns/behavioral/observer/), [Strategy](../../03_design_patterns/behavioral/strategy/), Module 02 → [OCP](../../02_solid_principles/02_open_closed/)

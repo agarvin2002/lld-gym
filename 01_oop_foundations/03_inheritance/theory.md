@@ -103,7 +103,3 @@ print(isinstance(tesla, Vehicle))  # True
 3. **Inheriting just for code reuse** — use composition or mixins instead
 4. **Overriding with incompatible behavior** — violates Liskov Substitution Principle
 
-## Links
-- [Exercise →](exercises/problem.md)
-- [Example 1: Shape hierarchy →](examples/example1_single_inheritance.py)
-- [Example 2: MRO and mixins →](examples/example2_mro_and_super.py)

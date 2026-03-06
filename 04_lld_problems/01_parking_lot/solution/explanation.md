@@ -50,3 +50,16 @@ ParkingSpot (ABC)
 - **New pricing model**: implement `FeeCalculator`, inject at construction
 - **Reservations**: add a `ReservationService` that pre-assigns spots with a hold expiry
 - **Multi-entry/exit gates**: the lock already makes this safe; just expose `park()`/`unpark()` via HTTP
+
+---
+
+## Where You've Seen This Before
+
+| This concept | Also appears in |
+|-------------|----------------|
+| Strategy (FeeCalculator) | Rate Limiter (`RateLimiterStrategy`), Food Delivery (`DeliveryFeeCalculator`), Ride Sharing (fare by vehicle type) |
+| Polymorphic `can_fit()` — no isinstance | Chess (`Piece.get_valid_moves()`), Food Delivery (`Order.transition_to()`) |
+| `threading.Lock` for shared state | Pub/Sub (subscriber list), LRU Cache (`ThreadSafeLRUCache`), Movie Booking (seat locking) |
+| Factory function for clean setup | Hotel Booking (room factory), Movie Booking (show setup) |
+
+**Pattern module:** Module 03 → [Strategy](../../../03_design_patterns/behavioral/strategy/)

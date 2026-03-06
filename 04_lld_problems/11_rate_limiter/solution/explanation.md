@@ -56,3 +56,16 @@ Evaluating all limiters (not `all(l.is_allowed(...) for l in ...)`) ensures ever
 ## Lazy per-client initialization
 
 Client state is initialized on the first call to `is_allowed()`, not in `__init__`. This avoids pre-registration and works naturally with any client ID that appears at runtime.
+
+---
+
+## Where You've Seen This Before
+
+| This concept | Also appears in |
+|-------------|----------------|
+| Strategy for swappable algorithms | Parking Lot (`FeeCalculator`), Food Delivery (`DeliveryFeeCalculator`), LRU Cache (LRU vs LFU policy) |
+| Proxy gating access | LRU Cache (ThreadSafe wrappers), Logging Framework (handler chain) |
+| Injectable clock for deterministic tests | Same pattern in Elevator System (injectable step counter) |
+| `threading.Lock` per-instance | Parking Lot (`park()`/`unpark()`), Pub/Sub (subscriber list), Movie Booking (seat locking) |
+
+**Pattern modules:** Module 03 → [Strategy](../../../03_design_patterns/behavioral/strategy/), [Proxy](../../../03_design_patterns/structural/proxy/)

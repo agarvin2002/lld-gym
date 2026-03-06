@@ -1,4 +1,18 @@
-"""Movie Ticket Booking System — Reference Solution."""
+"""
+Movie Ticket Booking System — Starter File
+===========================================
+Your task: Implement a movie ticket booking system.
+
+Read problem.md and design.md before starting.
+
+Design decisions:
+  - @dataclass for simple value objects (Movie, Theater, Seat, Screen, Show, Booking)
+  - SeatStatus tracks AVAILABLE/BOOKED per seat
+  - SeatCategory determines pricing (REGULAR, PREMIUM, VIP)
+  - Row 0 = VIP, rows 1..rows//3 = PREMIUM, rest = REGULAR
+  - Book seats atomically using Screen._lock (per-screen threading.Lock)
+  - Use uuid.uuid4() for all IDs
+"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
@@ -74,53 +88,45 @@ class Booking:
 
 class BookingSystem:
     def __init__(self) -> None:
-        self._movies: dict[str, Movie] = {}
-        self._theaters: dict[str, Theater] = {}
-        self._screens: dict[str, Screen] = {}
-        self._shows: dict[str, Show] = {}
-        self._bookings: dict[str, Booking] = {}
-        self._lock = threading.Lock()
+        # TODO: Create _movies, _theaters, _screens, _shows, _bookings
+        #       as empty dicts keyed by their respective IDs
+        # TODO: Create _lock = threading.Lock()
+        pass
 
     def add_movie(self, title: str, duration_minutes: int, genre: str) -> Movie:
-        movie = Movie(
-            movie_id=str(uuid.uuid4()),
-            title=title,
-            duration_minutes=duration_minutes,
-            genre=genre,
-        )
-        self._movies[movie.movie_id] = movie
-        return movie
+        """Create and register a Movie.
+
+        TODO:
+            - Create Movie with movie_id = str(uuid.uuid4())
+            - Store in _movies and return it
+        """
+        pass
 
     def add_theater(self, name: str, location: str) -> Theater:
-        theater = Theater(
-            theater_id=str(uuid.uuid4()), name=name, location=location
-        )
-        self._theaters[theater.theater_id] = theater
-        return theater
+        """Create and register a Theater.
+
+        TODO:
+            - Create Theater with theater_id = str(uuid.uuid4())
+            - Store in _theaters and return it
+        """
+        pass
 
     def add_screen(
         self, theater: Theater, screen_number: int, rows: int, cols: int
     ) -> Screen:
-        seats = []
-        for r in range(rows):
-            if r == 0:
-                cat = SeatCategory.VIP
-            elif r <= rows // 3:
-                cat = SeatCategory.PREMIUM
-            else:
-                cat = SeatCategory.REGULAR
-            for c in range(cols):
-                seats.append(
-                    Seat(seat_id=f"R{r}C{c}", row=r, col=c, category=cat)
-                )
-        screen = Screen(
-            screen_id=str(uuid.uuid4()),
-            theater=theater,
-            screen_number=screen_number,
-            seats=seats,
-        )
-        self._screens[screen.screen_id] = screen
-        return screen
+        """Create a Screen with auto-generated seats.
+
+        Seat category rules:
+          - Row 0 → VIP
+          - Rows 1 to rows//3 → PREMIUM
+          - Remaining rows → REGULAR
+
+        TODO:
+            - Create seats with seat_id = f"R{r}C{c}", assign category per rules above
+            - Create Screen with screen_id = str(uuid.uuid4())
+            - Store in _screens and return it
+        """
+        pass
 
     def add_show(
         self,
@@ -129,47 +135,39 @@ class BookingSystem:
         show_time: datetime,
         pricing: dict[SeatCategory, float],
     ) -> Show:
-        show = Show(
-            show_id=str(uuid.uuid4()),
-            movie=movie,
-            screen=screen,
-            show_time=show_time,
-            pricing=pricing,
-        )
-        self._shows[show.show_id] = show
-        return show
+        """Create and register a Show.
+
+        TODO:
+            - Create Show with show_id = str(uuid.uuid4())
+            - Store in _shows and return it
+        """
+        pass
 
     def book_seats(self, user_name: str, show: Show, seat_ids: list[str]) -> Booking:
-        if not seat_ids:
-            raise ValueError("seat_ids cannot be empty.")
-        seat_map = {s.seat_id: s for s in show.screen.seats}
-        for sid in seat_ids:
-            if sid not in seat_map:
-                raise ValueError(f"Seat {sid!r} not found on this screen.")
-        with show.screen._lock:
-            for sid in seat_ids:
-                if seat_map[sid].status != SeatStatus.AVAILABLE:
-                    raise ValueError(f"Seat {sid!r} is already booked.")
-            for sid in seat_ids:
-                seat_map[sid].status = SeatStatus.BOOKED
-        seats = [seat_map[sid] for sid in seat_ids]
-        total = sum(show.pricing.get(s.category, 0.0) for s in seats)
-        booking = Booking(
-            booking_id=str(uuid.uuid4()),
-            user_name=user_name,
-            show=show,
-            seats=seats,
-            total_amount=total,
-        )
-        with self._lock:
-            self._bookings[booking.booking_id] = booking
-        return booking
+        """Book one or more seats for a show (thread-safe per screen).
+
+        TODO:
+            - Raise ValueError if seat_ids is empty
+            - Build a seat_map from show.screen.seats
+            - Raise ValueError if any seat_id is not in seat_map
+            - Under show.screen._lock:
+                - Raise ValueError if any seat is already BOOKED
+                - Mark all requested seats as BOOKED
+            - Calculate total from show.pricing per seat category
+            - Create Booking with booking_id = str(uuid.uuid4())
+            - Store in _bookings (under self._lock) and return it
+        """
+        pass
 
     def get_available_seats(self, show: Show) -> list[Seat]:
-        return [s for s in show.screen.seats if s.status == SeatStatus.AVAILABLE]
+        # TODO: Return seats with status == AVAILABLE from show.screen.seats
+        pass
 
     def get_booking(self, booking_id: str) -> Booking:
-        with self._lock:
-            if booking_id not in self._bookings:
-                raise ValueError(f"Booking {booking_id!r} not found.")
-            return self._bookings[booking_id]
+        """Retrieve a booking by ID.
+
+        TODO:
+            - Under _lock: raise ValueError if not found
+            - Return the Booking
+        """
+        pass

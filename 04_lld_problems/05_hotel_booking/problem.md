@@ -93,3 +93,16 @@ reservation = hotel.book_room("G001", "101", date(2025, 6, 1), date(2025, 6, 5))
 hotel.check_in(reservation.reservation_id)
 hotel.check_out(reservation.reservation_id)
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Strategy** | `PricingStrategy` ABC — weekend surcharge, corporate rate, flat-rate are interchangeable |
+| **State** | Reservation lifecycle: PENDING → CONFIRMED → CHECKED_IN → CHECKED_OUT / CANCELLED |
+| **Thread Safety** | `threading.Lock` prevents double-booking for overlapping date ranges |
+| **SRP** | `Room` stores attributes; `Reservation` tracks lifecycle; `Hotel` orchestrates operations |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [State](../../03_design_patterns/behavioral/state/)

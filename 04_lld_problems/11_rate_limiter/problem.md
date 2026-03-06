@@ -76,3 +76,16 @@ print(service.check("user:99"))         # True (first request)
 - For the token bucket, calculate elapsed time since the last refill to determine how many tokens to add.
 - For the sliding window, a `collections.deque` lets you efficiently pop old timestamps from the left.
 - For `RateLimiterService.check()`, iterate limiters in order and call `is_allowed()` on each — do **not** short-circuit before calling every limiter, because each call has side-effects (state update).
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Strategy** | `RateLimiter` ABC — Token Bucket, Fixed Window, Sliding Window are fully interchangeable |
+| **Proxy** | `RateLimiterService` acts as a gating proxy — checks all limiters before forwarding to the real handler |
+| **Thread Safety** | `threading.Lock` per limiter instance protects per-client state from concurrent requests |
+| **OCP** | New algorithm → new `RateLimiter` subclass; `RateLimiterService` never changes |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [Proxy](../../03_design_patterns/structural/proxy/), Module 02 → [OCP](../../02_solid_principles/02_open_closed/)

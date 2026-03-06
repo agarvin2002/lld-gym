@@ -56,9 +56,9 @@ A stub-based, test-driven LLD learning resource. Learners edit `starter.py`, run
 ```
 01_oop_foundations/     — 5 OOP topics (complete)
 02_solid_principles/    — 5 SOLID principles (complete)
-03_design_patterns/     — 13 patterns in creational/structural/behavioral/ (partially complete)
-04_lld_problems/        — 15 FAANG problems (7 complete with solutions, 8 stubs only)
-05_concurrency/         — threading theory + examples (exercises incomplete)
+03_design_patterns/     — 13 patterns in creational/structural/behavioral/ (complete)
+04_lld_problems/        — 15 FAANG problems (all complete: solutions, tests, stubs, design.md)
+05_concurrency/         — threading theory, examples, and exercises (complete)
 cheatsheets/            — 4 quick-reference markdown files
 interview_guide/        — 3-file interview strategy guide
 ```
@@ -114,15 +114,15 @@ from starter import Foo, Bar
 
 **Modules 01–02** (OOP + SOLID): Fully complete. 212 tests pass against solutions.
 
-**Module 03** (Design Patterns): 4 patterns fully built (singleton, adapter, decorator, observer); only `theory.md` exists for the rest (factory); exercises directories exist but are empty for all others.
+**Module 03** (Design Patterns): All 13 patterns fully built (theory, 2 examples, starter, tests, solution, explanation):
+- Creational: Singleton, Factory Method, Abstract Factory, Builder
+- Structural: Decorator, Proxy, Facade, Adapter
+- Behavioral: Strategy, Observer, State, Command, Iterator, Template Method, Chain of Responsibility
 
-**Module 04** (LLD Problems): 7 problems have full solutions + 3-tier tests:
-- `01_parking_lot`, `02_elevator_system`, `03_atm_system`, `04_library_management`, `05_hotel_booking` (basic tests only), `08_food_delivery`, `12_lru_cache`
+**Module 04** (LLD Problems): All 15 problems have full solutions, 3-tier tests (test_basic, test_extended, test_edge), proper starter stubs with TODO comments, and cross-module references in explanation.md:
+- `01_parking_lot`, `02_elevator_system`, `03_atm_system`, `04_library_management`, `05_hotel_booking`, `06_movie_ticket_booking`, `07_ride_sharing`, `08_food_delivery`, `09_chess`, `10_snake_and_ladders`, `11_rate_limiter`, `12_lru_cache`, `13_pub_sub_system`, `14_logging_framework`, `15_vending_machine`
 
-Problems that exist as stubs only (no tests, no solution):
-- `06_movie_ticket_booking`, `07_ride_sharing`, `09_chess`, `10_snake_and_ladders`, `11_rate_limiter`, `13_pub_sub_system`, `14_logging_framework`, `15_vending_machine`
-
-**Module 05** (Concurrency): Theory + examples for threading basics only; all exercises incomplete.
+**Module 05** (Concurrency): Fully complete — theory, examples, and exercises (starter, tests, solution, explanation) for all 3 topics: threading basics, locks & semaphores, thread-safe patterns.
 
 ### Solution Quality Standard
 Solutions use: `ABC` + `@abstractmethod`, `@dataclass`/`@property`, `threading.Lock` for concurrency, `uuid.uuid4()` for IDs, `Enum` for state/category, Strategy pattern for swappable algorithms. See `04_lld_problems/01_parking_lot/solution/solution.py` or `03_atm_system/solution/solution.py` as reference examples.

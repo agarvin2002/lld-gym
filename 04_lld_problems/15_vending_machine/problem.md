@@ -74,3 +74,15 @@ machine = VendingMachine(products)
 class InvalidStateError(Exception):
     pass
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **State** | `VendingMachineState`: IDLE → COIN_INSERTED → PRODUCT_SELECTED → DISPENSING → IDLE |
+| **Guard clauses** | `_require_state()` raises `InvalidStateError` when an operation is called in the wrong state |
+| **SRP** | `Product` is data; `VendingMachine` manages state transitions and inventory |
+
+**See also:** Module 03 → [State](../../03_design_patterns/behavioral/state/), also compare with [ATM System](../03_atm_system/) which uses the same `_require_state()` guard pattern

@@ -53,3 +53,16 @@ Card: card_number, pin_hash
 Account: account_id, balance, is_locked
 CashDispenser: available_cash, dispense(amount) → dict[int, int]
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **State** | ATM behavior governed by `ATMState` enum (IDLE → CARD_INSERTED → PIN_VERIFIED → DISPENSING) |
+| **Strategy** | Cash dispenser uses a greedy denomination algorithm |
+| **SRP** | `Account` holds balance/PIN; `ATM` manages session state; `CashDispenser` manages physical cash |
+| **Guard clauses** | `_require_state()` enforces valid transitions at method entry |
+
+**See also:** Module 03 → [State](../../03_design_patterns/behavioral/state/), [Strategy](../../03_design_patterns/behavioral/strategy/)

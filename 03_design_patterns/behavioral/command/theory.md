@@ -80,6 +80,3 @@ print(editor.text)   # (empty)
 - Putting business logic inside the command (it should just delegate to the receiver)
 - Not storing enough state in the command to support undo
 - Creating a Command class for trivial one-time operations (use a lambda instead)
-
-## Links
-- Exercise: `exercises/starter.py` — implement a smart home controller with undoable device commands

@@ -241,15 +241,3 @@ If a property returns a mutable object (list, dict, set), return a copy unless y
 A property that does heavy computation will re-run that computation every time the attribute is accessed. If the result doesn't change often, consider caching or using a regular method to signal that calling it has a cost.
 
 ---
-
-## 8. Exercises
-
-Head to [exercises/problem.md](exercises/problem.md) to build a `Temperature` class that uses properties for unit conversion.
-
-The exercise reinforces:
-- Using `@property` for read-only computed attributes
-- Using `@property` + `@setter` with validation
-- Internal storage in one representation, public API in multiple representations
-- Proper encapsulation: only one setter, all other conversions are derived
-
-After attempting the exercise, compare your solution to [exercises/solution/solution.py](exercises/solution/solution.py) and read [exercises/solution/explanation.md](exercises/solution/explanation.md).

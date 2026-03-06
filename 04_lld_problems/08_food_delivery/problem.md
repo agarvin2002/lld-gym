@@ -90,3 +90,15 @@ app.update_order_status(order.order_id, OrderStatus.DELIVERED)
 app.rate_restaurant(order.order_id, 5)
 app.rate_agent(order.order_id, 4)
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **State** | `OrderStatus` — long 6-step pipeline: PLACED → CONFIRMED → PREPARING → READY → PICKED_UP → DELIVERED |
+| **Strategy** | `DeliveryFeeCalculator` — flat fee + distance-based component; easily extended for surge pricing |
+| **SRP** | `Order` owns status transitions; `Restaurant` owns menu; `FoodDeliveryApp` orchestrates all operations |
+
+**See also:** Module 03 → [State](../../03_design_patterns/behavioral/state/), [Strategy](../../03_design_patterns/behavioral/strategy/)

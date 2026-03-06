@@ -1,4 +1,18 @@
-"""Ride Sharing System — Reference Solution."""
+"""
+Ride Sharing System — Starter File
+=====================================
+Your task: Implement a ride sharing system (Uber/Lyft style).
+
+Read problem.md and design.md before starting.
+
+Design decisions:
+  - @dataclass for Location, Vehicle, Driver, Rider, Trip
+  - Location.distance_to() uses Euclidean distance
+  - Nearest available driver is selected when a ride is requested
+  - Fare = base_fee + per_unit_distance * distance (per VehicleType)
+  - Driver status: AVAILABLE → ON_TRIP → AVAILABLE (after completion)
+  - Use uuid.uuid4() for IDs
+"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -42,8 +56,9 @@ class Location:
     lat: float
     lon: float
 
-    def distance_to(self, other: Location) -> float:
-        return math.sqrt((self.lat - other.lat) ** 2 + (self.lon - other.lon) ** 2)
+    def distance_to(self, other: "Location") -> float:
+        # TODO: Return Euclidean distance: sqrt((lat diff)^2 + (lon diff)^2)
+        pass
 
 
 @dataclass
@@ -81,6 +96,7 @@ class Trip:
 
 
 class RideSharingSystem:
+    # Pricing per vehicle type: (base_fee, per_unit_distance_rate)
     PRICING = {
         VehicleType.STANDARD: (2.0, 1.0),
         VehicleType.PREMIUM:  (5.0, 2.0),
@@ -88,70 +104,84 @@ class RideSharingSystem:
     }
 
     def __init__(self) -> None:
-        self._drivers: dict[str, Driver] = {}
-        self._riders: dict[str, Rider] = {}
-        self._trips: dict[str, Trip] = {}
+        # TODO: Create _drivers, _riders, _trips as empty dicts keyed by their IDs
+        pass
 
     def register_driver(
         self, name: str, license_plate: str, vehicle_type: VehicleType
     ) -> Driver:
-        vehicle = Vehicle(license_plate=license_plate, vehicle_type=vehicle_type)
-        driver = Driver(driver_id=str(uuid.uuid4()), name=name, vehicle=vehicle)
-        self._drivers[driver.driver_id] = driver
-        return driver
+        """Register a new driver with a vehicle.
+
+        TODO:
+            - Create Vehicle and Driver with driver_id = str(uuid.uuid4())
+            - Store in _drivers and return driver
+        """
+        pass
 
     def register_rider(self, name: str) -> Rider:
-        rider = Rider(rider_id=str(uuid.uuid4()), name=name)
-        self._riders[rider.rider_id] = rider
-        return rider
+        """Register a new rider.
+
+        TODO:
+            - Create Rider with rider_id = str(uuid.uuid4())
+            - Store in _riders and return rider
+        """
+        pass
 
     def update_driver_location(self, driver_id: str, lat: float, lon: float) -> None:
-        if driver_id not in self._drivers:
-            raise DriverNotFoundError(f"Driver {driver_id!r} not found.")
-        self._drivers[driver_id].location = Location(lat, lon)
+        """Update a driver's current location.
+
+        TODO:
+            - Raise DriverNotFoundError if driver_id not in _drivers
+            - Set driver.location = Location(lat, lon)
+        """
+        pass
 
     def set_driver_status(self, driver_id: str, status: DriverStatus) -> None:
-        if driver_id not in self._drivers:
-            raise DriverNotFoundError(f"Driver {driver_id!r} not found.")
-        self._drivers[driver_id].status = status
+        """Update a driver's availability status.
+
+        TODO:
+            - Raise DriverNotFoundError if driver_id not in _drivers
+            - Set driver.status = status
+        """
+        pass
 
     def request_ride(
         self, rider_id: str, pickup: Location, dropoff: Location
     ) -> Trip:
-        available = [d for d in self._drivers.values() if d.status == DriverStatus.AVAILABLE]
-        if not available:
-            raise NoDriverAvailableError("No drivers available.")
-        nearest = min(available, key=lambda d: d.location.distance_to(pickup))
+        """Match rider to nearest available driver and create a trip.
 
-        distance = pickup.distance_to(dropoff)
-        base, rate = self.PRICING[nearest.vehicle.vehicle_type]
-        fare = round(base + rate * distance, 2)
-
-        trip = Trip(
-            trip_id=str(uuid.uuid4()),
-            driver=nearest,
-            rider=self._riders[rider_id],
-            pickup=pickup,
-            dropoff=dropoff,
-            fare=fare,
-        )
-        nearest.status = DriverStatus.ON_TRIP
-        self._trips[trip.trip_id] = trip
-        return trip
+        TODO:
+            - Filter drivers with status == AVAILABLE
+            - Raise NoDriverAvailableError if none available
+            - Select nearest driver by pickup.distance_to(pickup) from driver.location
+            - Calculate fare: base + rate * pickup.distance_to(dropoff), rounded to 2dp
+            - Create Trip with trip_id = str(uuid.uuid4())
+            - Set driver.status = ON_TRIP
+            - Store in _trips and return trip
+        """
+        pass
 
     def complete_trip(self, trip_id: str) -> Trip:
-        if trip_id not in self._trips:
-            raise TripNotFoundError(f"Trip {trip_id!r} not found.")
-        trip = self._trips[trip_id]
-        trip.status = TripStatus.COMPLETED
-        trip.completed_at = datetime.now()
-        trip.driver.status = DriverStatus.AVAILABLE
-        return trip
+        """Mark a trip as completed and free the driver.
+
+        TODO:
+            - Raise TripNotFoundError if trip_id not in _trips
+            - Set trip.status = COMPLETED
+            - Set trip.completed_at = datetime.now()
+            - Set trip.driver.status = AVAILABLE
+            - Return trip
+        """
+        pass
 
     def get_trip(self, trip_id: str) -> Trip:
-        if trip_id not in self._trips:
-            raise TripNotFoundError(f"Trip {trip_id!r} not found.")
-        return self._trips[trip_id]
+        """Retrieve a trip by ID.
+
+        TODO:
+            - Raise TripNotFoundError if not found
+            - Return the trip
+        """
+        pass
 
     def get_available_drivers(self) -> list[Driver]:
-        return [d for d in self._drivers.values() if d.status == DriverStatus.AVAILABLE]
+        # TODO: Return drivers with status == AVAILABLE
+        pass

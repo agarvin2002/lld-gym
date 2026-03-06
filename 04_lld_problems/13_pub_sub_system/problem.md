@@ -79,3 +79,16 @@ broker.publish("pub1", "news", {"headline": "No one listening now"})
 3. How would you support **message filtering** (subscribers receive only matching messages)?
 4. How would you implement a **dead-letter queue** for repeatedly failing messages?
 5. How would you scale this to multiple broker nodes?
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Observer** | Subscribers register callbacks; `MessageBroker.publish()` fans out to all registered handlers |
+| **Strategy** | Delivery mode — synchronous (in caller's thread) vs async (background `threading.Thread`) |
+| **Thread Safety** | `threading.Lock` protects subscriber list; snapshot copy before invoking callbacks prevents deadlock |
+| **SRP** | `Topic` stores messages and subscriber list; `MessageBroker` manages the topic registry |
+
+**See also:** Module 03 → [Observer](../../03_design_patterns/behavioral/observer/), [Strategy](../../03_design_patterns/behavioral/strategy/)

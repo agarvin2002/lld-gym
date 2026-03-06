@@ -43,3 +43,16 @@ Even when called from `PRODUCT_SELECTED`, `refund()` clears `self._selected = No
 ## State pattern vs Enum-based FSM
 
 This solution uses an Enum + `_require_state`. An alternative is the full State pattern (separate class per state, like the design patterns module exercise). The Enum approach is simpler for small FSMs; the class-based State pattern scales better when each state needs significantly different behavior per method.
+
+---
+
+## Where You've Seen This Before
+
+| This concept | Also appears in |
+|-------------|----------------|
+| `_require_state()` guard pattern | ATM System (same helper name and same pattern) — compare the two for a clear illustration |
+| Enum FSM with explicit transitions | Food Delivery (`OrderStatus`), Ride Sharing (`DriverStatus` + `TripStatus`), Movie Booking (`SeatStatus`) |
+| Soft failure vs exception | Hotel Booking (`search_rooms` returns empty list vs raising) |
+| `round(..., 2)` for float money | Hotel Booking (price calculation), Food Delivery (delivery fee) |
+
+**Pattern module:** Module 03 → [State](../../../03_design_patterns/behavioral/state/)

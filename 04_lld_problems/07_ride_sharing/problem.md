@@ -69,3 +69,15 @@ class NoDriverAvailableError(Exception): pass
 class DriverNotFoundError(Exception): pass
 class TripNotFoundError(Exception): pass
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **State** | `DriverStatus` (AVAILABLE / ON_TRIP / OFFLINE) and `TripStatus` (REQUESTED / IN_PROGRESS / COMPLETED) — two parallel state machines |
+| **Strategy** | Fare calculation varies by `VehicleType` (base fare + rate per distance unit) |
+| **SRP** | `Driver` tracks location/status; `Trip` records the journey; `RideSharingSystem` handles matching |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [State](../../03_design_patterns/behavioral/state/)

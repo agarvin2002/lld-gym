@@ -1,4 +1,20 @@
-"""Vending Machine — Reference Solution."""
+"""
+Vending Machine — Starter File
+=================================
+Your task: Implement a vending machine with a state machine.
+
+Read problem.md and design.md before starting.
+
+Design decisions:
+  - VendingMachineState Enum: IDLE → COIN_INSERTED → PRODUCT_SELECTED → DISPENSING → IDLE
+  - _require_state() enforces valid states; raise InvalidStateError if violated
+  - insert_coin() accumulates balance and transitions to COIN_INSERTED
+    (can be called multiple times in COIN_INSERTED state to add more coins)
+  - select_product() validates code, quantity, and funds; returns descriptive string
+  - dispense() completes the transaction: deducts price, resets state, returns change message
+  - refund() returns all inserted coins from COIN_INSERTED or PRODUCT_SELECTED state
+  - restock() adds quantity to a product (only valid in IDLE state)
+"""
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -25,67 +41,85 @@ class Product:
 
 class VendingMachine:
     def __init__(self, products: dict[str, tuple[str, float, int]]) -> None:
-        self._products: dict[str, Product] = {
-            code: Product(code=code, name=name, price=price, quantity=qty)
-            for code, (name, price, qty) in products.items()
-        }
-        self._state = VendingMachineState.IDLE
-        self._balance = 0.0
-        self._selected: Product | None = None
+        """Initialize the vending machine with a product catalog.
+
+        Args:
+            products: dict mapping product code → (name, price, quantity)
+
+        TODO:
+            - Build _products: dict[str, Product] from the input dict
+              Hint: for code, (name, price, qty) in products.items()
+            - Set _state = VendingMachineState.IDLE
+            - Set _balance = 0.0
+            - Set _selected: Product | None = None
+        """
+        pass
 
     def _require_state(self, *allowed: VendingMachineState) -> None:
-        if self._state not in allowed:
-            raise InvalidStateError(
-                f"Cannot perform this action in state {self._state.name}."
-            )
+        """Raise InvalidStateError if current state is not in allowed.
+
+        TODO:
+            - If _state not in allowed: raise InvalidStateError
+              with message mentioning the current state name
+        """
+        pass
 
     def insert_coin(self, amount: float) -> None:
-        self._require_state(VendingMachineState.IDLE, VendingMachineState.COIN_INSERTED)
-        self._balance += amount
-        self._state = VendingMachineState.COIN_INSERTED
+        """Insert coins into the machine.
+
+        TODO:
+            - Require IDLE or COIN_INSERTED state
+            - Add amount to _balance
+            - Set state to COIN_INSERTED
+        """
+        pass
 
     def select_product(self, code: str) -> str:
-        self._require_state(VendingMachineState.COIN_INSERTED)
-        if code not in self._products:
-            return f"Product {code!r} not found."
-        product = self._products[code]
-        if product.quantity == 0:
-            return "Out of stock."
-        if self._balance < product.price:
-            return (
-                f"Insufficient funds. "
-                f"Price: ${product.price:.2f}, Balance: ${self._balance:.2f}"
-            )
-        self._selected = product
-        self._state = VendingMachineState.PRODUCT_SELECTED
-        return f"Selected: {product.name}. Please dispense."
+        """Select a product by code. Returns a status message string.
+
+        TODO:
+            - Require COIN_INSERTED state
+            - If code not in _products: return f"Product {code!r} not found."
+            - If product.quantity == 0: return "Out of stock."
+            - If _balance < product.price: return insufficient funds message
+              Format: f"Insufficient funds. Price: ${product.price:.2f}, Balance: ${self._balance:.2f}"
+            - Set _selected = product, transition to PRODUCT_SELECTED
+            - Return f"Selected: {product.name}. Please dispense."
+        """
+        pass
 
     def dispense(self) -> str:
-        self._require_state(VendingMachineState.PRODUCT_SELECTED)
-        product = self._selected
-        change = round(self._balance - product.price, 2)
-        product.quantity -= 1
-        self._balance = 0.0
-        self._selected = None
-        self._state = VendingMachineState.IDLE
-        return f"Dispensed: {product.name}. Change: ${change:.2f}"
+        """Dispense the selected product and return change as a message string.
+
+        TODO:
+            - Require PRODUCT_SELECTED state
+            - Calculate change = round(_balance - _selected.price, 2)
+            - Decrement _selected.quantity by 1
+            - Reset: _balance = 0.0, _selected = None, state = IDLE
+            - Return f"Dispensed: {product.name}. Change: ${change:.2f}"
+        """
+        pass
 
     def refund(self) -> float:
-        self._require_state(
-            VendingMachineState.COIN_INSERTED,
-            VendingMachineState.PRODUCT_SELECTED,
-        )
-        amount = self._balance
-        self._balance = 0.0
-        self._selected = None
-        self._state = VendingMachineState.IDLE
-        return amount
+        """Refund all inserted coins and reset to IDLE.
+
+        TODO:
+            - Require COIN_INSERTED or PRODUCT_SELECTED state
+            - Capture current _balance
+            - Reset: _balance = 0.0, _selected = None, state = IDLE
+            - Return the captured amount
+        """
+        pass
 
     def restock(self, code: str, quantity: int) -> None:
-        self._require_state(VendingMachineState.IDLE)
-        if code not in self._products:
-            raise ValueError(f"Unknown product code {code!r}.")
-        self._products[code].quantity += quantity
+        """Restock a product (admin operation).
+
+        TODO:
+            - Require IDLE state
+            - Raise ValueError if code not in _products
+            - Add quantity to _products[code].quantity
+        """
+        pass
 
     @property
     def current_state(self) -> VendingMachineState:

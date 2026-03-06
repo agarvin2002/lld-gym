@@ -237,15 +237,3 @@ Double-underscore name mangling (`__attr`) is for avoiding name collisions in su
 Always define `__repr__`. If you only define `__str__`, the REPL and logging will still show the useless default `<ClassName object at 0x...>` in many contexts.
 
 ---
-
-## 8. Exercises
-
-Head to [exercises/problem.md](exercises/problem.md) to build a `Product` and `ShoppingCart` class from scratch.
-
-The exercise reinforces:
-- Defining classes with validation in `__init__`
-- Instance methods that modify state
-- `__repr__` for debugging
-- `__eq__` for comparisons
-
-After attempting the exercise, compare your solution to [exercises/solution/solution.py](exercises/solution/solution.py) and read [exercises/solution/explanation.md](exercises/solution/explanation.md) for the reasoning behind the design decisions.

@@ -79,3 +79,16 @@ cache.get(4)       # returns 4
 2. What if keys had TTL (time-to-live) expiry?
 3. How would you persist the cache to disk efficiently?
 4. Can you implement LRU with only O(1) extra space (no extra data structures)?
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Strategy** | `LRUCache` and `LFUCache` are interchangeable eviction strategies with the same interface |
+| **Proxy** | `ThreadSafeLRUCache` / `ThreadSafeLFUCache` wrap base caches adding `threading.Lock` |
+| **Decorator** | Thread-safe wrappers add behaviour (locking) without changing the cache interface |
+| **SRP** | `DoublyLinkedList` / `Node` handle ordering; cache classes handle eviction policy |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [Proxy](../../03_design_patterns/structural/proxy/), [Decorator](../../03_design_patterns/structural/decorator/)

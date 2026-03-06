@@ -87,3 +87,15 @@ col:  0   1   2   3   4   5   6   7
 
 Position(row, col) — row 0 = rank 8 (Black back rank), row 7 = rank 1 (White back rank)
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Polymorphism / LSP** | Each `Piece` subclass implements `get_valid_moves()` — `Game` never uses isinstance |
+| **State** | `GameStatus`: ACTIVE → WHITE_WINS / BLACK_WINS / STALEMATE |
+| **SRP** | `Board` tracks positions; each `Piece` knows its own movement rules; `Game` enforces turn order and win conditions |
+
+**See also:** Module 03 → [State](../../03_design_patterns/behavioral/state/), Module 02 → [LSP](../../02_solid_principles/03_liskov_substitution/)

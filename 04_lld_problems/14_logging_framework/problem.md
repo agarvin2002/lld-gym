@@ -95,3 +95,17 @@ Stores records in a list. `records` property returns list. Useful for testing.
 ### `LoggerFactory`
 - `get_logger(name) -> Logger` — returns same instance for same name
 - `configure_root(handler)` — all loggers also send to root handlers (optional stretch goal)
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Chain of Responsibility** | `Logger` dispatches to each `LogHandler`; each handler decides independently whether to emit |
+| **Strategy** | `LogFormatter` ABC — `PlainFormatter` vs `JSONFormatter` are interchangeable |
+| **Template Method** | `LogHandler.handle()` skeleton: check min_level → format → emit; `ConsoleHandler`/`MemoryHandler` only override `emit()` |
+| **Singleton** | `LoggerFactory` returns the same `Logger` instance per name |
+| **Filter** | `LogFilter` ABC — `MinLevelFilter` gates records at both logger and handler level |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [Template Method](../../03_design_patterns/behavioral/template_method/)

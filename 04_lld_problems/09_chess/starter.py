@@ -1,4 +1,19 @@
-"""Chess Game — Reference Solution."""
+"""
+Chess Game — Starter File
+===========================
+Your task: Implement a two-player chess game.
+
+Read problem.md and design.md before starting.
+
+Design decisions:
+  - Piece is an ABC with get_valid_moves() per piece type
+  - _slide() helper in Piece handles Rook/Bishop/Queen movement
+  - Board uses a dict[Position, Piece] — sparse grid (only stores occupied squares)
+  - Position is a frozen dataclass (hashable) — check is_valid() before using
+  - Game enforces turn order and detects check, checkmate, stalemate
+  - make_move() tentatively applies a move, reverts it if it leaves own king in check
+  - Pawn promotes to Queen automatically on reaching the back rank
+"""
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -10,7 +25,7 @@ class Color(Enum):
     WHITE = "WHITE"
     BLACK = "BLACK"
 
-    def opponent(self) -> Color:
+    def opponent(self) -> "Color":
         return Color.BLACK if self == Color.WHITE else Color.WHITE
 
 
@@ -27,150 +42,127 @@ class Position:
     col: int
 
     def is_valid(self) -> bool:
-        return 0 <= self.row <= 7 and 0 <= self.col <= 7
+        # TODO: Return True if row and col are both in range [0, 7]
+        pass
 
 
 @dataclass
 class MoveResult:
     success: bool
     message: str
-    captured_piece: Optional[Piece] = None
+    captured_piece: Optional["Piece"] = None
 
 
 class Piece(ABC):
     def __init__(self, color: Color) -> None:
-        self.color = color
-        self.has_moved = False
+        # TODO: Store color and set has_moved = False
+        pass
 
     @abstractmethod
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        """Return all squares this piece can move to (ignoring check)."""
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        """Return all squares this piece can move to (ignoring check rules)."""
 
-    def _slide(self, board: Board, pos: Position, directions: list[tuple[int, int]]) -> list[Position]:
-        """Generate all squares in given directions until blocked."""
-        moves = []
-        for dr, dc in directions:
-            r, c = pos.row + dr, pos.col + dc
-            while 0 <= r <= 7 and 0 <= c <= 7:
-                target = Position(r, c)
-                occupant = board.get_piece(target)
-                if occupant is None:
-                    moves.append(target)
-                elif occupant.color != self.color:
-                    moves.append(target)  # capture
-                    break
-                else:
-                    break  # blocked by own piece
-                r += dr
-                c += dc
-        return moves
+    def _slide(self, board: "Board", pos: Position, directions: list[tuple[int, int]]) -> list[Position]:
+        """Generate all squares in given directions until blocked.
+
+        TODO:
+            - For each direction (dr, dc), extend from pos one step at a time
+            - If square is empty: add it, keep going
+            - If square has an enemy piece: add it (capture), stop
+            - If square has a friendly piece: stop (don't add)
+            - Stop at board boundary (row/col outside 0-7)
+        """
+        pass
 
 
 class King(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        moves = []
-        for dr in (-1, 0, 1):
-            for dc in (-1, 0, 1):
-                if dr == 0 and dc == 0:
-                    continue
-                target = Position(position.row + dr, position.col + dc)
-                if not target.is_valid():
-                    continue
-                occupant = board.get_piece(target)
-                if occupant is None or occupant.color != self.color:
-                    moves.append(target)
-        return moves
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        """King moves one square in any of 8 directions.
+
+        TODO:
+            - For each (dr, dc) in all 8 adjacent directions:
+              - Compute target = Position(row+dr, col+dc)
+              - Skip if not valid or occupied by friendly piece
+              - Add to moves list
+        """
+        pass
 
 
 class Queen(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        return self._slide(board, position, [
-            (-1, 0), (1, 0), (0, -1), (0, 1),
-            (-1, -1), (-1, 1), (1, -1), (1, 1),
-        ])
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        # TODO: Use _slide() with all 8 directions (straight + diagonal)
+        pass
 
 
 class Rook(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        return self._slide(board, position, [(-1, 0), (1, 0), (0, -1), (0, 1)])
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        # TODO: Use _slide() with 4 straight directions: up, down, left, right
+        pass
 
 
 class Bishop(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        return self._slide(board, position, [(-1, -1), (-1, 1), (1, -1), (1, 1)])
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        # TODO: Use _slide() with 4 diagonal directions
+        pass
 
 
 class Knight(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        moves = []
-        for dr, dc in [(-2,-1),(-2,1),(-1,-2),(-1,2),(1,-2),(1,2),(2,-1),(2,1)]:
-            target = Position(position.row + dr, position.col + dc)
-            if not target.is_valid():
-                continue
-            occupant = board.get_piece(target)
-            if occupant is None or occupant.color != self.color:
-                moves.append(target)
-        return moves
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        """Knight moves in L-shapes (8 possible offsets).
+
+        TODO:
+            - Try all 8 knight offsets: (-2,-1),(-2,1),(-1,-2),(-1,2),(1,-2),(1,2),(2,-1),(2,1)
+            - Skip if target is not valid or occupied by friendly piece
+        """
+        pass
 
 
 class Pawn(Piece):
-    def get_valid_moves(self, board: Board, position: Position) -> list[Position]:
-        moves = []
-        direction = -1 if self.color == Color.WHITE else 1
-        start_row = 6 if self.color == Color.WHITE else 1
+    def get_valid_moves(self, board: "Board", position: Position) -> list[Position]:
+        """Pawn movement rules:
+          - WHITE moves UP (row decreases), starts at row 6
+          - BLACK moves DOWN (row increases), starts at row 1
+          - Can move forward 1 square if empty
+          - Can move forward 2 squares from starting row if both squares empty
+          - Can capture diagonally forward (only if enemy piece present)
 
-        # Single forward step
-        fwd = Position(position.row + direction, position.col)
-        if fwd.is_valid() and board.get_piece(fwd) is None:
-            moves.append(fwd)
-            # Double step from starting row
-            if position.row == start_row:
-                fwd2 = Position(position.row + 2 * direction, position.col)
-                if board.get_piece(fwd2) is None:
-                    moves.append(fwd2)
-
-        # Diagonal captures
-        for dc in (-1, 1):
-            cap = Position(position.row + direction, position.col + dc)
-            if cap.is_valid():
-                occupant = board.get_piece(cap)
-                if occupant is not None and occupant.color != self.color:
-                    moves.append(cap)
-
-        return moves
+        TODO: Implement these rules correctly.
+        """
+        pass
 
 
 class Board:
     def __init__(self) -> None:
-        self._grid: dict[Position, Piece] = {}
+        # TODO: Create _grid: dict[Position, Piece] = {}
+        pass
 
     def get_piece(self, pos: Position) -> Optional[Piece]:
-        return self._grid.get(pos)
+        # TODO: Return piece at pos or None
+        pass
 
     def set_piece(self, pos: Position, piece: Optional[Piece]) -> None:
-        if piece is None:
-            self._grid.pop(pos, None)
-        else:
-            self._grid[pos] = piece
+        # TODO: If piece is None: remove pos from _grid (pop with default)
+        # TODO: If piece is not None: set _grid[pos] = piece
+        pass
 
     def find_king(self, color: Color) -> Optional[Position]:
-        for pos, piece in self._grid.items():
-            if isinstance(piece, King) and piece.color == color:
-                return pos
-        return None
+        # TODO: Scan _grid for a King with the given color; return its Position or None
+        pass
 
     def pieces_of(self, color: Color) -> list[tuple[Position, Piece]]:
-        return [(pos, p) for pos, p in self._grid.items() if p.color == color]
+        # TODO: Return list of (pos, piece) for all pieces of the given color
+        pass
 
     def setup_standard(self) -> None:
-        """Place all 32 pieces in their starting positions."""
-        back_rank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
-        for col, cls in enumerate(back_rank):
-            self.set_piece(Position(0, col), cls(Color.BLACK))
-            self.set_piece(Position(7, col), cls(Color.WHITE))
-        for col in range(8):
-            self.set_piece(Position(1, col), Pawn(Color.BLACK))
-            self.set_piece(Position(6, col), Pawn(Color.WHITE))
+        """Place all 32 pieces in starting positions.
+
+        Back rank order: [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
+        Black back rank: row 0, White back rank: row 7
+        Black pawns: row 1, White pawns: row 6
+
+        TODO: Implement this standard chess setup.
+        """
+        pass
 
 
 @dataclass
@@ -181,101 +173,64 @@ class Player:
 
 class Game:
     def __init__(self, white_name: str, black_name: str) -> None:
-        self._white = Player(white_name, Color.WHITE)
-        self._black = Player(black_name, Color.BLACK)
-        self._board = Board()
-        self._current_color = Color.WHITE
-        self._status = GameStatus.ACTIVE
+        # TODO: Create Player objects for white and black
+        # TODO: Create a Board (don't set up pieces yet — that's start_game())
+        # TODO: Set _current_color = Color.WHITE
+        # TODO: Set _status = GameStatus.ACTIVE
+        pass
 
     def start_game(self) -> None:
-        self._board.setup_standard()
+        # TODO: Call self._board.setup_standard()
+        pass
 
     def make_move(self, from_pos: Position, to_pos: Position) -> bool:
-        if self._status != GameStatus.ACTIVE:
-            return False
+        """Attempt to move the piece at from_pos to to_pos.
 
-        piece = self._board.get_piece(from_pos)
-        if piece is None or piece.color != self._current_color:
-            return False
-
-        valid_moves = piece.get_valid_moves(self._board, from_pos)
-        if to_pos not in valid_moves:
-            return False
-
-        # Apply tentatively
-        captured = self._board.get_piece(to_pos)
-        self._board.set_piece(to_pos, piece)
-        self._board.set_piece(from_pos, None)
-
-        # Pawn promotion
-        if isinstance(piece, Pawn):
-            last_rank = 0 if piece.color == Color.WHITE else 7
-            if to_pos.row == last_rank:
-                self._board.set_piece(to_pos, Queen(piece.color))
-
-        # Reject if own king left in check
-        if self.is_in_check(self._current_color):
-            # Undo
-            self._board.set_piece(from_pos, piece)
-            self._board.set_piece(to_pos, captured)
-            return False
-
-        piece.has_moved = True
-
-        # Switch turns
-        self._current_color = self._current_color.opponent()
-
-        # Check game-ending conditions for the opponent
-        opp = self._current_color
-        if self.is_checkmate(opp):
-            self._status = (
-                GameStatus.WHITE_WINS if opp == Color.BLACK else GameStatus.BLACK_WINS
-            )
-        elif self.is_stalemate(opp):
-            self._status = GameStatus.STALEMATE
-
-        return True
+        TODO:
+            - Return False if game is not ACTIVE
+            - Return False if no piece at from_pos or it's the wrong color's turn
+            - Return False if to_pos not in piece's valid moves
+            - Apply move tentatively (move piece on board)
+            - Handle pawn promotion: if pawn reaches back rank, replace with Queen
+            - If own king is in check after move: UNDO the move, return False
+            - Set piece.has_moved = True
+            - Switch _current_color to opponent
+            - Check for checkmate or stalemate against the opponent
+              - Update _status accordingly
+            - Return True
+        """
+        pass
 
     def get_valid_moves(self, pos: Position) -> list[Position]:
-        piece = self._board.get_piece(pos)
-        if piece is None:
-            return []
-        raw_moves = piece.get_valid_moves(self._board, pos)
-        legal = []
-        for target in raw_moves:
-            captured = self._board.get_piece(target)
-            self._board.set_piece(target, piece)
-            self._board.set_piece(pos, None)
-            if not self.is_in_check(piece.color):
-                legal.append(target)
-            self._board.set_piece(pos, piece)
-            self._board.set_piece(target, captured)
-        return legal
+        """Return legal moves for the piece at pos (filters moves that leave king in check).
+
+        TODO:
+            - Get raw moves from piece.get_valid_moves()
+            - For each target: tentatively apply, check if own king is in check, undo
+            - Return only moves that don't leave own king in check
+        """
+        pass
 
     def is_in_check(self, color: Color) -> bool:
-        king_pos = self._board.find_king(color)
-        if king_pos is None:
-            return False
-        for pos, piece in self._board.pieces_of(color.opponent()):
-            if king_pos in piece.get_valid_moves(self._board, pos):
-                return True
-        return False
+        """Return True if the king of the given color is under attack.
+
+        TODO:
+            - Find king position via board.find_king(color)
+            - For each enemy piece, check if king_pos is in its valid moves
+        """
+        pass
 
     def is_checkmate(self, color: Color) -> bool:
-        if not self.is_in_check(color):
-            return False
-        return not self._has_any_legal_move(color)
+        # TODO: Return True if in check AND has no legal moves
+        pass
 
     def is_stalemate(self, color: Color) -> bool:
-        if self.is_in_check(color):
-            return False
-        return not self._has_any_legal_move(color)
+        # TODO: Return True if NOT in check AND has no legal moves
+        pass
 
     def _has_any_legal_move(self, color: Color) -> bool:
-        for pos, piece in self._board.pieces_of(color):
-            if self.get_valid_moves(pos):
-                return True
-        return False
+        # TODO: Return True if any piece of color has at least one legal move
+        pass
 
     @property
     def status(self) -> GameStatus:

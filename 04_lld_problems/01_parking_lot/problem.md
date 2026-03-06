@@ -117,3 +117,17 @@ Action 5: get_availability()
 - [ ] Fee calculation with ceiling rounding (Strategy pattern)
 - [ ] `get_availability()` aggregating across all floors
 - [ ] Error handling for double-park and invalid ticket
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Strategy** | `FeeCalculator` ABC — swap pricing without touching lot logic |
+| **Polymorphism / LSP** | `ParkingSpot.can_fit(vehicle)` — no isinstance checks in service layer |
+| **Factory Function** | `create_parking_lot()` — encapsulates multi-floor construction |
+| **Thread Safety** | `threading.Lock` in `ParkingLot.park()` / `unpark()` |
+| **SRP** | `ParkingTicket` stores receipt data; `FeeCalculator` owns fee logic |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), Module 02 → [LSP](../../02_solid_principles/03_liskov_substitution/), [SRP](../../02_solid_principles/01_single_responsibility/)

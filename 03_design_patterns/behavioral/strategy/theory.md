@@ -73,5 +73,17 @@ print(sorter.sort([5, 3, 1, 4, 2]))  # [1, 2, 3, 4, 5]
 - Making strategies stateful — keep them stateless and reusable
 - Over-engineering: if you have two algorithms and they'll never change, just use a function
 
-## Links
-- Exercise: `exercises/starter.py` — implement a payment processing system with multiple fee strategies
+---
+
+## LLD Problems That Use This Pattern
+
+| Problem | Strategy class | What it swaps |
+|---------|---------------|---------------|
+| [01 Parking Lot](../../../04_lld_problems/01_parking_lot/) | `FeeCalculator` | Hourly vs flat-rate vs daily pricing |
+| [07 Ride Sharing](../../../04_lld_problems/07_ride_sharing/) | Fare calculation by `VehicleType` | Per-km rate differs by vehicle class |
+| [08 Food Delivery](../../../04_lld_problems/08_food_delivery/) | `DeliveryFeeCalculator` | Distance-based fee calculation |
+| [11 Rate Limiter](../../../04_lld_problems/11_rate_limiter/) | `RateLimiter` ABC | Token Bucket vs Fixed Window vs Sliding Window |
+| [12 LRU Cache](../../../04_lld_problems/12_lru_cache/) | `LRUCache` / `LFUCache` | Different eviction policies |
+| [14 Logging Framework](../../../04_lld_problems/14_logging_framework/) | `LogFormatter` | Plain text vs JSON output |
+
+**Quickest example:** Rate Limiter — three algorithms, one interface, injected at construction. Start there.

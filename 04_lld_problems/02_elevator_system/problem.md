@@ -73,3 +73,15 @@ Request
 Direction (Enum): UP, DOWN
 ElevatorState (Enum): IDLE, MOVING_UP, MOVING_DOWN, DOOR_OPEN
 ```
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **Strategy** | `SchedulingStrategy` ABC — swap dispatch algorithm without touching `ElevatorController` |
+| **State** | `ElevatorState` enum — IDLE, MOVING_UP, MOVING_DOWN, DOOR_OPEN |
+| **SRP** | `Elevator` tracks its own state; `ElevatorController` handles dispatch logic |
+
+**See also:** Module 03 → [Strategy](../../03_design_patterns/behavioral/strategy/), [State](../../03_design_patterns/behavioral/state/)

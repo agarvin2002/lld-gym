@@ -1,5 +1,18 @@
 """
-Problem 12: LRU Cache + LFU Cache — Complete Solution
+LRU Cache + LFU Cache — Starter File
+========================================
+Your task: Implement LRU and LFU caches, then wrap them in thread-safe versions.
+
+Read problem.md and design.md before starting.
+
+Design decisions:
+  - LRUCache: use collections.OrderedDict (maintains insertion order)
+    - get(): move accessed key to end (most recent), return value or -1
+    - put(): update/insert key; if over capacity evict the FIRST item (least recent)
+  - LFUCache: O(1) get/put using three dicts + min_freq tracking
+    - key_to_val, key_to_freq, freq_to_keys (OrderedDict for LRU tie-breaking)
+    - On access/update: increment freq; if freq bucket empties and was min, update min_freq
+  - ThreadSafeLRUCache / ThreadSafeLFUCache: wrap with threading.RLock
 """
 
 from collections import OrderedDict
@@ -9,139 +22,132 @@ import threading
 
 class LRUCache:
     """
-    Least Recently Used Cache using OrderedDict.
-    O(1) get and put.
+    Least Recently Used Cache — O(1) get and put.
 
-    OrderedDict maintains insertion order. We use move_to_end() to mark
-    items as recently used. The front (first item) is always the LRU.
+    Uses OrderedDict: most-recently-used item is always at the END.
     """
 
     def __init__(self, capacity: int) -> None:
-        self.capacity: int = capacity
-        self.cache: OrderedDict[int, int] = OrderedDict()
+        # TODO: Store capacity
+        # TODO: Create cache: OrderedDict[int, int] = OrderedDict()
+        pass
 
     def get(self, key: int) -> int:
-        if key not in self.cache:
-            return -1
-        # Move to end (most recently used position)
-        self.cache.move_to_end(key)
-        return self.cache[key]
+        """Return value for key, or -1 if not present.
+
+        TODO:
+            - If key not in cache: return -1
+            - Move key to end (most recently used): cache.move_to_end(key)
+            - Return cache[key]
+        """
+        pass
 
     def put(self, key: int, value: int) -> None:
-        if key in self.cache:
-            # Update value and mark as most recently used
-            self.cache.move_to_end(key)
-            self.cache[key] = value
-        else:
-            if len(self.cache) >= self.capacity:
-                # Evict least recently used (first item)
-                self.cache.popitem(last=False)
-            self.cache[key] = value
+        """Insert or update key-value pair.
+
+        TODO:
+            - If key already exists: move to end, update value
+            - If new key:
+              - If at capacity: evict LRU item (cache.popitem(last=False))
+              - Insert key at end
+        """
+        pass
 
 
 class LFUCache:
     """
-    Least Frequently Used Cache.
-    O(1) get and put using three hash maps + min_freq tracking.
+    Least Frequently Used Cache — O(1) get and put.
 
     Data structures:
-      key_to_val:   key -> value
-      key_to_freq:  key -> access frequency
-      freq_to_keys: frequency -> OrderedDict of keys (ordered by recency)
-      min_freq:     current minimum frequency in the cache
+      key_to_val:   key → value
+      key_to_freq:  key → access count
+      freq_to_keys: freq → OrderedDict of keys (LRU order within same frequency)
+      min_freq:     current minimum frequency among all cached keys
     """
 
     def __init__(self, capacity: int) -> None:
-        self.capacity: int = capacity
-        self.min_freq: int = 0
-        self.key_to_val: Dict[int, int] = {}
-        self.key_to_freq: Dict[int, int] = {}
-        self.freq_to_keys: Dict[int, OrderedDict[int, None]] = {}
+        # TODO: Store capacity and set min_freq = 0
+        # TODO: Create key_to_val: Dict[int, int] = {}
+        # TODO: Create key_to_freq: Dict[int, int] = {}
+        # TODO: Create freq_to_keys: Dict[int, OrderedDict[int, None]] = {}
+        pass
 
     def get(self, key: int) -> int:
-        if key not in self.key_to_val:
-            return -1
-        self._increment_freq(key)
-        return self.key_to_val[key]
+        """Return value for key, or -1 if not present.
+
+        TODO:
+            - If key not in key_to_val: return -1
+            - Call _increment_freq(key) to update frequency tracking
+            - Return key_to_val[key]
+        """
+        pass
 
     def put(self, key: int, value: int) -> None:
-        if self.capacity <= 0:
-            return
-        if key in self.key_to_val:
-            # Update existing key
-            self.key_to_val[key] = value
-            self._increment_freq(key)
-        else:
-            if len(self.key_to_val) >= self.capacity:
-                self._evict()
-            # Insert new key with frequency 1
-            self.key_to_val[key] = value
-            self.key_to_freq[key] = 1
-            if 1 not in self.freq_to_keys:
-                self.freq_to_keys[1] = OrderedDict()
-            self.freq_to_keys[1][key] = None
-            self.min_freq = 1
+        """Insert or update key-value pair.
+
+        TODO:
+            - If capacity <= 0: return immediately
+            - If key already exists: update value, call _increment_freq(key)
+            - If new key:
+              - If at capacity: call _evict() to remove LFU item
+              - Insert key: key_to_val[key] = value, key_to_freq[key] = 1
+              - Add to freq_to_keys[1] (create OrderedDict if needed)
+              - Set min_freq = 1
+        """
+        pass
 
     def _increment_freq(self, key: int) -> None:
-        """Move key from its current frequency bucket to the next one."""
-        freq = self.key_to_freq[key]
-        # Remove from current frequency bucket
-        del self.freq_to_keys[freq][key]
-        if not self.freq_to_keys[freq]:
-            del self.freq_to_keys[freq]
-            if self.min_freq == freq:
-                self.min_freq = freq + 1
-        # Add to next frequency bucket
-        new_freq = freq + 1
-        self.key_to_freq[key] = new_freq
-        if new_freq not in self.freq_to_keys:
-            self.freq_to_keys[new_freq] = OrderedDict()
-        self.freq_to_keys[new_freq][key] = None
+        """Move key from its current frequency bucket to the next.
+
+        TODO:
+            - Get current freq = key_to_freq[key]
+            - Remove key from freq_to_keys[freq]; if bucket empty, delete it
+              - If that was min_freq: update min_freq = freq + 1
+            - Increment key_to_freq[key]
+            - Add key to freq_to_keys[freq+1] (create if needed)
+        """
+        pass
 
     def _evict(self) -> None:
-        """Evict the LFU key (LRU among ties)."""
-        # The LRU key at min_freq bucket is the first item in the OrderedDict
-        lfu_keys = self.freq_to_keys[self.min_freq]
-        evict_key, _ = lfu_keys.popitem(last=False)
-        if not self.freq_to_keys[self.min_freq]:
-            del self.freq_to_keys[self.min_freq]
-        del self.key_to_val[evict_key]
-        del self.key_to_freq[evict_key]
+        """Evict the LFU key (LRU among ties at min_freq).
+
+        TODO:
+            - Get the LRU key from freq_to_keys[min_freq] using popitem(last=False)
+            - If that bucket is now empty, delete it from freq_to_keys
+            - Remove from key_to_val and key_to_freq
+        """
+        pass
 
 
 class ThreadSafeLRUCache:
-    """
-    Thread-safe LRU Cache using a reentrant lock.
-    All public operations are protected by the lock.
-    """
+    """Thread-safe LRU Cache using a reentrant lock."""
 
     def __init__(self, capacity: int) -> None:
-        self._cache: LRUCache = LRUCache(capacity)
-        self._lock: threading.RLock = threading.RLock()
+        # TODO: Create self._cache = LRUCache(capacity)
+        # TODO: Create self._lock = threading.RLock()
+        pass
 
     def get(self, key: int) -> int:
-        with self._lock:
-            return self._cache.get(key)
+        # TODO: Under _lock, delegate to self._cache.get(key)
+        pass
 
     def put(self, key: int, value: int) -> None:
-        with self._lock:
-            self._cache.put(key, value)
+        # TODO: Under _lock, delegate to self._cache.put(key, value)
+        pass
 
 
 class ThreadSafeLFUCache:
-    """
-    Thread-safe LFU Cache using a reentrant lock.
-    All public operations are protected by the lock.
-    """
+    """Thread-safe LFU Cache using a reentrant lock."""
 
     def __init__(self, capacity: int) -> None:
-        self._cache: LFUCache = LFUCache(capacity)
-        self._lock: threading.RLock = threading.RLock()
+        # TODO: Create self._cache = LFUCache(capacity)
+        # TODO: Create self._lock = threading.RLock()
+        pass
 
     def get(self, key: int) -> int:
-        with self._lock:
-            return self._cache.get(key)
+        # TODO: Under _lock, delegate to self._cache.get(key)
+        pass
 
     def put(self, key: int, value: int) -> None:
-        with self._lock:
-            self._cache.put(key, value)
+        # TODO: Under _lock, delegate to self._cache.put(key, value)
+        pass

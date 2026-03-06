@@ -91,5 +91,16 @@ class Context:
 - Forgetting to validate transitions (allowing illegal state jumps)
 - Using State when a simple `Enum` flag would do
 
-## Links
-- Exercise: `exercises/starter.py` — implement a vending machine with states: IDLE, HAS_MONEY, DISPENSING, OUT_OF_STOCK
+---
+
+## LLD Problems That Use This Pattern
+
+| Problem | States | Key observation |
+|---------|--------|----------------|
+| [03 ATM System](../../../04_lld_problems/03_atm_system/) | IDLE → CARD_INSERTED → PIN_VERIFIED → DISPENSING | `_require_state()` guard — cleanest Enum FSM example |
+| [15 Vending Machine](../../../04_lld_problems/15_vending_machine/) | IDLE → COIN_INSERTED → PRODUCT_SELECTED → DISPENSING | Same guard pattern, different domain — compare the two |
+| [08 Food Delivery](../../../04_lld_problems/08_food_delivery/) | PLACED → CONFIRMED → PREPARING → READY → PICKED_UP → DELIVERED | Long linear pipeline — state as progress tracker |
+| [07 Ride Sharing](../../../04_lld_problems/07_ride_sharing/) | Driver: OFFLINE / AVAILABLE / ON_TRIP; Trip: REQUESTED / IN_PROGRESS / COMPLETED | Two parallel FSMs on different entities |
+| [06 Movie Booking](../../../04_lld_problems/06_movie_ticket_booking/) | Seat: AVAILABLE → BOOKED | State at the entity level (per seat), not system level |
+
+**Best starting point:** ATM System + Vending Machine back-to-back — same `_require_state` technique, different state graphs.

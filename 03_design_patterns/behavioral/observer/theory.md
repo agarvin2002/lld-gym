@@ -56,7 +56,15 @@ Push is simpler. Pull is more flexible (observers choose what to read).
 - **Order dependency**: observers shouldn't depend on notification order
 - **Cascade notifications**: observer → changes subject → notifies again → infinite loop
 
-## Links
-- [Example 1: Event system →](examples/example1_event_system.py)
-- [Example 2: Stock ticker →](examples/example2_stock_ticker.py)
-- [Exercise →](exercises/problem.md)
+---
+
+## LLD Problems That Use This Pattern
+
+| Problem | Subject | Observers |
+|---------|---------|-----------|
+| [13 Pub/Sub System](../../../04_lld_problems/13_pub_sub_system/) | `Topic` | Subscriber callbacks — Observer taken to its logical conclusion |
+| [04 Library Management](../../../04_lld_problems/04_library_management/) | `ReservationQueue` | Waiting members notified when a book becomes available |
+| [08 Food Delivery](../../../04_lld_problems/08_food_delivery/) | `Order` | Customer and delivery agent react to status changes |
+| [07 Ride Sharing](../../../04_lld_problems/07_ride_sharing/) | `Trip` | Driver and rider react to trip lifecycle events |
+
+**Best example:** Pub/Sub System — the entire system is one big Observer mechanism. Study it after the exercise.

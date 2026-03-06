@@ -71,3 +71,16 @@ class SeatStatus(Enum):
 - Use `threading.Lock` on the `Screen` to keep locking at the finest possible granularity (per-screen vs. system-wide).
 - Use `uuid.uuid4()` for all entity IDs.
 - Use `@dataclass` for data-holding classes.
+
+---
+
+## Patterns & Principles Used
+
+| Pattern / Principle | Where |
+|---------------------|-------|
+| **State** | `SeatStatus`: AVAILABLE → BOOKED; no cancellation keeps state machine simple |
+| **Facade** | `BookingSystem` provides a single interface over movies, theaters, shows, and seats |
+| **Thread Safety** | Per-screen `threading.Lock` prevents concurrent double-booking |
+| **SRP** | `Show` owns seat map and pricing; `Booking` records the transaction; `BookingSystem` orchestrates |
+
+**See also:** Module 03 → [State](../../03_design_patterns/behavioral/state/), [Facade](../../03_design_patterns/structural/facade/)

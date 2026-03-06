@@ -49,3 +49,16 @@ Same name → same instance. This is the **Registry** pattern. It ensures that c
 ## `LogLevel` comparison via `__lt__`/`__ge__`
 
 Python Enum doesn't support `<` by default. Adding `__lt__` etc. on the class allows natural comparisons: `record.level >= LogLevel.WARNING`. Using `.value` comparisons internally keeps it simple.
+
+---
+
+## Where You've Seen This Before
+
+| This concept | Also appears in |
+|-------------|----------------|
+| Strategy for formatter | Template Method exercise (`CSVReportGenerator`, `HTMLReportGenerator`) — same idea: fixed pipeline, variant output format |
+| Singleton registry | LRU Cache (`ThreadSafeLRUCache` factory), Pub/Sub (`MessageBroker` as central registry) |
+| Chain of handlers | Rate Limiter (`RateLimiterService` iterates all limiters), Pub/Sub (fan-out to all subscribers) |
+| Frozen dataclass (immutable record) | Parking Lot (`ParkingTicket`), Ride Sharing (`Trip`) |
+
+**Pattern modules:** Module 03 → [Template Method](../../../03_design_patterns/behavioral/template_method/), [Strategy](../../../03_design_patterns/behavioral/strategy/)
