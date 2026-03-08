@@ -1,85 +1,100 @@
 """
-Exercise: Employee Compensation Hierarchy
+WHAT YOU'RE BUILDING
+--------------------
+You are building an Employee system for a company.
 
-Fill in the TODOs. Run tests with: pytest tests.py -v
+There are three types of employees:
+  Manager  — gets a 20% bonus on top of their base salary
+  Engineer — gets a 10% bonus on top of their base salary
+  Director — gets a 40% bonus (Director also IS-A Manager, so they have a team)
+
+Each type must know their role name and total pay including bonus.
+
+TIP: This is exactly the same pattern used in LLD problems like
+"Hotel System" (Room → SingleRoom, DoubleRoom, Suite) or
+"Vehicle System" (Vehicle → Car, Truck, Bike).
+
+HOW TO RUN TESTS
+    pytest tests.py -v
 """
 from abc import ABC, abstractmethod
 
 
 class Employee(ABC):
     """
-    Abstract base class for all employee types.
-
-    Subclasses must implement get_total_compensation() and get_role().
+    Base class for all employee types.
+    Cannot be created directly — you must use Manager, Engineer, or Director.
     """
 
     def __init__(self, name: str, employee_id: str, base_salary: float) -> None:
-        # TODO: store name, employee_id, base_salary as instance attributes
-        pass
+        # TIP: always save common attributes in the base class __init__
+        self.name = name
+        self.employee_id = employee_id
+        self.base_salary = base_salary
 
     @abstractmethod
     def get_total_compensation(self) -> float:
-        """Return total compensation including bonuses. Round to 2 decimal places."""
+        """Return total pay including bonus. Round to 2 decimal places."""
         ...
 
     @abstractmethod
     def get_role(self) -> str:
-        """Return the role title as a string (e.g., 'Manager')."""
+        """Return the job title (e.g. 'Manager', 'Engineer', 'Director')."""
         ...
 
     def __repr__(self) -> str:
-        # TODO: return f"<{role} {name} (id={employee_id}) comp=${total_comp:.2f}>"
-        pass
+        return (
+            f"<{self.get_role()} {self.name} "
+            f"(id={self.employee_id}) "
+            f"comp=${self.get_total_compensation():.2f}>"
+        )
 
 
 class Manager(Employee):
     """
-    A manager receives a 20% bonus on top of base salary.
-
-    Additional attribute: team_size (number of direct reports)
+    A Manager gets a 20% bonus.
+    Also has a team_size — how many people they manage.
     """
 
     def __init__(self, name: str, employee_id: str, base_salary: float, team_size: int) -> None:
-        # TODO: call super().__init__() with name, employee_id, base_salary
-        # TODO: store team_size
-        pass
+        # Always call super().__init__() first — sets up name, employee_id, base_salary
+        super().__init__(name, employee_id, base_salary)
+        self.team_size = team_size
 
     def get_role(self) -> str:
-        # TODO: return "Manager"
-        pass
+        return "Manager"
 
     def get_total_compensation(self) -> float:
-        # TODO: return base_salary * 1.20, rounded to 2 decimal places
-        pass
+        # Manager gets base salary + 20% bonus
+        return round(self.base_salary * 1.20, 2)
 
 
 class Engineer(Employee):
     """
-    An engineer receives a 10% bonus on top of base salary.
-
-    Additional attribute: tech_stack (list of technologies)
+    An Engineer gets a 10% bonus.
+    Also has a tech_stack — list of technologies they work with.
     """
 
     def __init__(self, name: str, employee_id: str, base_salary: float, tech_stack: list[str]) -> None:
-        # TODO: call super().__init__()
-        # TODO: store tech_stack
-        pass
+        super().__init__(name, employee_id, base_salary)
+        self.tech_stack = tech_stack
 
     def get_role(self) -> str:
-        # TODO: return "Engineer"
-        pass
+        return "Engineer"
 
     def get_total_compensation(self) -> float:
-        # TODO: return base_salary * 1.10, rounded to 2 decimal places
-        pass
+        # Engineer gets base salary + 10% bonus
+        return round(self.base_salary * 1.10, 2)
 
 
 class Director(Manager):
     """
-    A director receives a 40% bonus on top of base salary.
-    Director IS-A Manager (inherits team_size).
+    A Director gets a 40% bonus.
+    Director IS-A Manager — so they also have a team_size.
+    Plus they have a department name.
 
-    Additional attribute: department name
+    TIP: Director inherits from Manager (not Employee directly).
+    This shows a real "is-a" chain: Director is a Manager, Manager is an Employee.
     """
 
     def __init__(
@@ -90,14 +105,13 @@ class Director(Manager):
         team_size: int,
         department: str,
     ) -> None:
-        # TODO: call super().__init__() with name, employee_id, base_salary, team_size
-        # TODO: store department
-        pass
+        # Call Manager's __init__ (which calls Employee's __init__ automatically)
+        super().__init__(name, employee_id, base_salary, team_size)
+        self.department = department
 
     def get_role(self) -> str:
-        # TODO: return "Director"
-        pass
+        return "Director"
 
     def get_total_compensation(self) -> float:
-        # TODO: return base_salary * 1.40, rounded to 2 decimal places
-        pass
+        # Director gets base salary + 40% bonus
+        return round(self.base_salary * 1.40, 2)

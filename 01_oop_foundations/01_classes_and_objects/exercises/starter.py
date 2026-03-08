@@ -1,240 +1,144 @@
 """
-starter.py — Classes and Objects Exercise
------------------------------------------
-Your task: Implement the Product and ShoppingCart classes.
+WHAT YOU'RE BUILDING
+--------------------
+You are building a simple online shop system with two classes:
 
-Instructions:
-  1. Read problem.md carefully before starting.
-  2. Fill in every method marked with TODO.
-  3. Do not change method signatures or class names.
-  4. Run tests with: pytest tests.py -v
+  Product     — one item you can sell (name, price, quantity, SKU)
+  ShoppingCart — a bag that holds products
 
-Type hints are already provided — keep them.
-Docstrings describe the expected behavior — implement exactly that.
+This is the same kind of design used in real apps like Flipkart, Amazon, or Meesho.
+
+HOW TO RUN TESTS
+    pytest tests.py -v
+
+RULES
+  - Do not change method names or class names (tests will break)
+  - Type hints are already given — keep them
+  - Fill every TODO comment
 """
 
 
 class Product:
     """
-    Represents a purchasable product in an e-commerce system.
+    One product in the shop.
 
-    Attributes:
-        name (str):     Human-readable product name. Non-empty.
-        price (float):  Unit price in dollars. Must be > 0.
-        quantity (int): Number of units available in stock. Must be >= 0.
-        sku (str):      Stock Keeping Unit — unique identifier. Non-empty.
+    name     — what the product is called (e.g. "Laptop")
+    price    — how much it costs (must be > 0)
+    quantity — how many are in stock (must be >= 0)
+    sku      — a unique ID code for this product (e.g. "SKU-001")
     """
 
     def __init__(self, name: str, price: float, quantity: int, sku: str) -> None:
-        """
-        Initialize a Product with validation.
+        # TODO: Check that name is not empty. Raise ValueError if it is.
+        # HINT: if not name: raise ValueError("name cannot be empty")
 
-        Raises:
-            ValueError: If name or sku are empty strings.
-            ValueError: If price is not strictly positive (> 0).
-            ValueError: If quantity is negative.
-        """
-        # TODO: Validate name — must be a non-empty string
-        # TODO: Validate price — must be strictly greater than 0
-        # TODO: Validate quantity — must be >= 0
-        # TODO: Validate sku — must be a non-empty string
-        # TODO: Assign all validated values to instance attributes
+        # TODO: Check that price is greater than 0. Raise ValueError if not.
+
+        # TODO: Check that quantity is 0 or more. Raise ValueError if negative.
+
+        # TODO: Check that sku is not empty. Raise ValueError if it is.
+
+        # TODO: Save all four values as self.name, self.price, self.quantity, self.sku
         pass
 
     def __repr__(self) -> str:
-        """
-        Return a developer-friendly string representation.
-
-        Example:
-            Product(name='Laptop Pro', price=999.99, quantity=10, sku='SKU-LAPTOP-001')
-        """
-        # TODO: Return a string in the format shown in the docstring example
+        # TODO: Return a string like this (exactly):
+        # Product(name='Laptop Pro', price=999.99, quantity=10, sku='SKU-LAPTOP-001')
+        # HINT: use f"Product(name='{self.name}', price={self.price}, ...)"
         pass
 
     def __str__(self) -> str:
-        """
-        Return a human-readable string representation.
-
-        Example:
-            Laptop Pro (SKU: SKU-LAPTOP-001) — $999.99 | 10 in stock
-        """
-        # TODO: Return a user-friendly string describing the product
+        # TODO: Return a friendly string like this:
+        # Laptop Pro (SKU: SKU-LAPTOP-001) — $999.99 | 10 in stock
         pass
 
     def __eq__(self, other: object) -> bool:
-        """
-        Two Products are equal if they have the same SKU.
-
-        Note: equality is based on sku, not name or price (which can change).
-
-        Returns:
-            NotImplemented if other is not a Product.
-            True if self.sku == other.sku.
-            False otherwise.
-        """
-        # TODO: Check if other is a Product instance
-        # TODO: Return NotImplemented if not
-        # TODO: Compare by sku
+        # TODO: Two products are equal if they have the same SKU (not the same name or price).
+        # HINT: first check "if not isinstance(other, Product): return NotImplemented"
+        # Then compare self.sku == other.sku
         pass
 
     def __hash__(self) -> int:
-        """
-        Return a hash based on sku (consistent with __eq__).
-
-        This allows Products to be used as dict keys and in sets.
-        """
         # TODO: Return hash(self.sku)
+        # This lets Product be used as a key in a dict or in a set.
+        # TIP: You need __hash__ whenever you define __eq__.
         pass
 
     def is_in_stock(self) -> bool:
-        """
-        Return True if there is at least one unit available in stock.
-
-        Returns:
-            True if self.quantity > 0, False otherwise.
-        """
-        # TODO: Return True if quantity > 0
+        # TODO: Return True if quantity > 0, False if quantity is 0
+        # HINT: one line — return self.quantity > 0
         pass
 
     def apply_discount(self, percent: float) -> None:
-        """
-        Reduce the product's price by a given percentage.
-
-        Args:
-            percent: The discount percentage. Must be in range (0, 100].
-                     e.g., percent=10 reduces a $100 item to $90.
-
-        Raises:
-            ValueError: If percent is not in range (0, 100].
-        """
-        # TODO: Validate that percent is in range (0, 100]
-        # TODO: Calculate the discount amount: price * percent / 100
-        # TODO: Subtract the discount from self.price
+        # TODO: Reduce the price by the given percent.
+        # percent must be between 0 and 100 (not including 0, including 100).
+        # Raise ValueError if it is out of range.
+        # HINT: new_price = self.price * (1 - percent / 100)
         pass
+
 
 class ShoppingCart:
     """
-    A shopping cart that holds a collection of Products.
+    A shopping cart. It holds products and how many of each the customer wants.
 
-    Internally, stores items as a dict mapping Product -> cart_quantity,
-    where cart_quantity is how many units the customer wants to buy
-    (distinct from the product's stock quantity).
+    Internally it uses a dict:  { product: quantity_in_cart }
+
+    TIP: This same pattern (object → count dict) appears in many LLD problems
+    like hotel booking (room type → count) or cinema (seat → booking).
     """
 
     def __init__(self) -> None:
-        """
-        Initialize an empty shopping cart.
-
-        Internal state:
-            _items (dict[Product, int]): maps each product to its cart quantity.
-        """
-        # TODO: Initialize self._items as an empty dict
+        # TODO: Create an empty dict and save it as self._items
+        # HINT: self._items = {}
         pass
 
     def add_item(self, product: "Product", quantity: int = 1) -> None:
-        """
-        Add one or more units of a product to the cart.
-
-        If the product is already in the cart, increase its cart quantity.
-        If the product is not yet in the cart, add it with the given quantity.
-
-        Args:
-            product:  The Product to add.
-            quantity: Number of units to add. Must be >= 1.
-
-        Raises:
-            ValueError: If quantity < 1.
-        """
-        # TODO: Validate that quantity >= 1
-        # TODO: If product already in cart, increase quantity
-        # TODO: If product not in cart, add with given quantity
+        # TODO: Add the product to the cart with the given quantity.
+        # If the product is already in the cart, add to its existing quantity.
+        # quantity must be >= 1. Raise ValueError if not.
+        # HINT: use self._items.get(product, 0) to get the current quantity
         pass
 
     def remove_item(self, product: "Product") -> None:
-        """
-        Remove a product entirely from the cart.
-
-        Args:
-            product: The Product to remove.
-
-        Raises:
-            ValueError: If the product is not in the cart.
-        """
-        # TODO: Check if product is in _items
-        # TODO: Raise ValueError with a descriptive message if not found
-        # TODO: Delete the product from _items
+        # TODO: Remove the product from the cart completely.
+        # Raise ValueError if the product is not in the cart.
+        # HINT: check "if product not in self._items" first
         pass
 
     def get_total(self) -> float:
-        """
-        Calculate the total price of all items in the cart.
-
-        Total = sum(product.price * cart_quantity) for each item.
-
-        Returns:
-            The total cost as a float.
-        """
-        # TODO: Iterate over _items.items() and sum price * quantity for each
+        # TODO: Return the total cost = sum of (price × quantity) for every item
+        # HINT: use a loop or sum() over self._items.items()
         pass
 
     def get_item_count(self) -> int:
-        """
-        Return the total number of individual units in the cart.
-
-        E.g., if cart has 1 laptop and 2 mice, count is 3.
-
-        Returns:
-            Sum of all cart quantities.
-        """
-        # TODO: Return sum of all values in _items
+        # TODO: Return the total number of individual units in the cart.
+        # Example: 1 laptop + 2 pens = 3 total units
+        # HINT: sum(self._items.values())
         pass
 
     def is_empty(self) -> bool:
-        """
-        Return True if the cart has no items.
-
-        Returns:
-            True if _items is empty, False otherwise.
-        """
-        # TODO: Return True if _items is empty
+        # TODO: Return True if the cart has nothing in it
+        # HINT: one line — return len(self._items) == 0
         pass
 
     def get_items(self) -> dict:
-        """
-        Return a copy of the internal items dict.
-
-        Returns a copy to prevent external mutation of internal state.
-
-        Returns:
-            dict[Product, int]: copy of _items
-        """
-        # TODO: Return a copy of _items (use dict(...) or .copy())
+        # TODO: Return a COPY of self._items (not the original!)
+        # Why a copy? So nobody can change the cart from outside.
+        # HINT: return dict(self._items)
         pass
 
     def __repr__(self) -> str:
-        """
-        Return a developer-friendly string representation.
-
-        Example:
-            ShoppingCart(items=3, distinct_products=2, total=1059.97)
-        """
-        # TODO: Show number of distinct products, total item count, and total price
+        # TODO: Return a string like:
+        # ShoppingCart(items=3, distinct_products=2, total=1059.97)
+        # HINT: use len(self._items) for distinct_products
         pass
 
     def __len__(self) -> int:
-        """
-        Return the total number of individual units in the cart.
-
-        Enables: len(cart)
-        """
-        # TODO: Return self.get_item_count()
+        # TODO: Return total number of units (same as get_item_count)
+        # This lets you do: len(cart)
         pass
 
     def __contains__(self, product: "Product") -> bool:
-        """
-        Return True if the product is in the cart.
-
-        Enables: product in cart
-        """
-        # TODO: Return True if product is a key in _items
+        # TODO: Return True if the product is in the cart
+        # This lets you do: "if product in cart"
         pass

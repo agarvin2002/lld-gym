@@ -1,43 +1,50 @@
 """
-Example 1: Single Inheritance — Shape Hierarchy
+example1_single_inheritance.py
+-------------------------------
+Shows how inheritance works using a Shape hierarchy.
 
-Demonstrates:
-- ABC (Abstract Base Class) as parent
-- super().__init__() usage
-- Method overriding (area, perimeter)
-- isinstance() and issubclass()
-- Polymorphism via a list of Shapes
+Real-world use: this parent-child pattern appears in almost every multi-class system.
+  Vehicle → Car, Truck, Bike
+  Room    → SingleRoom, DoubleRoom, Suite
+  Spot    → CarSpot, BikeSpot, TruckSpot
+
+Run this file directly:
+    python3 example1_single_inheritance.py
 """
 import math
 from abc import ABC, abstractmethod
 
 
+# The parent class (also called base class)
+# It's abstract — you cannot create a Shape directly
 class Shape(ABC):
-    """Abstract base for all shapes. Defines the interface every shape must implement."""
+    """Base class for all shapes. Every shape must have area() and perimeter()."""
 
     def __init__(self, color: str = "black") -> None:
         self.color = color
 
     @abstractmethod
     def area(self) -> float:
-        """Return the area of the shape."""
+        """Every subclass must implement this."""
         ...
 
     @abstractmethod
     def perimeter(self) -> float:
-        """Return the perimeter of the shape."""
+        """Every subclass must implement this."""
         ...
 
     def describe(self) -> str:
+        # This is a concrete method — all shapes can use it without rewriting
         return (
             f"{self.__class__.__name__}(color={self.color}, "
             f"area={self.area():.2f}, perimeter={self.perimeter():.2f})"
         )
 
 
+# Child class 1 — inherits from Shape
 class Circle(Shape):
     def __init__(self, radius: float, color: str = "black") -> None:
-        super().__init__(color)  # always call parent __init__
+        super().__init__(color)   # always call parent __init__ first
         self.radius = radius
 
     def area(self) -> float:
@@ -47,6 +54,7 @@ class Circle(Shape):
         return 2 * math.pi * self.radius
 
 
+# Child class 2
 class Rectangle(Shape):
     def __init__(self, width: float, height: float, color: str = "black") -> None:
         super().__init__(color)
@@ -60,15 +68,16 @@ class Rectangle(Shape):
         return 2 * (self.width + self.height)
 
 
+# Child class 3
 class Triangle(Shape):
     def __init__(self, a: float, b: float, c: float, color: str = "black") -> None:
         super().__init__(color)
         if a + b <= c or a + c <= b or b + c <= a:
-            raise ValueError("Invalid triangle sides")
+            raise ValueError("These three sides cannot form a valid triangle")
         self.a, self.b, self.c = a, b, c
 
     def area(self) -> float:
-        # Heron's formula
+        # Heron's formula — works for any triangle
         s = self.perimeter() / 2
         return math.sqrt(s * (s - self.a) * (s - self.b) * (s - self.c))
 
@@ -76,10 +85,16 @@ class Triangle(Shape):
         return self.a + self.b + self.c
 
 
+# This function accepts ANY Shape — it doesn't care which one
+# TIP: writing functions that accept the base class (not the specific subclass)
+# is the key to flexible, extendable code.
 def print_shape_info(shape: Shape) -> None:
-    """Accepts any Shape — polymorphism in action."""
     print(shape.describe())
 
+
+# =============================================================================
+# RUN THIS TO SEE IT IN ACTION
+# =============================================================================
 
 if __name__ == "__main__":
     shapes: list[Shape] = [
@@ -90,20 +105,19 @@ if __name__ == "__main__":
 
     print("=== Shape Hierarchy Demo ===\n")
     for s in shapes:
-        print_shape_info(s)
+        print_shape_info(s)   # same function call, different output for each type
 
-    print("\n=== isinstance / issubclass checks ===")
+    print("\n=== isinstance checks ===")
     circle = shapes[0]
-    print(f"circle is Shape: {isinstance(circle, Shape)}")       # True
-    print(f"circle is Circle: {isinstance(circle, Circle)}")     # True
-    print(f"circle is Rectangle: {isinstance(circle, Rectangle)}")  # False
-    print(f"issubclass(Circle, Shape): {issubclass(Circle, Shape)}")  # True
+    print(f"circle is a Shape:     {isinstance(circle, Shape)}")       # True
+    print(f"circle is a Circle:    {isinstance(circle, Circle)}")      # True
+    print(f"circle is a Rectangle: {isinstance(circle, Rectangle)}")   # False
 
-    print("\n=== Cannot instantiate ABC ===")
+    print("\n=== Cannot create Shape directly ===")
     try:
-        s = Shape()
+        s = Shape()   # type: ignore
     except TypeError as e:
-        print(f"TypeError: {e}")
+        print(f"Error: {e}")
 
     print("\n=== Total area of all shapes ===")
     total = sum(s.area() for s in shapes)

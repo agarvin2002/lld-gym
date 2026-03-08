@@ -62,6 +62,8 @@ class NoDiscount(Discount):
     """
 
     def apply(self, price: float) -> float:
+        if price <= 0:
+            raise ValueError(f"price should be grater than 0 got {price}")
         return price
 
     def __repr__(self) -> str:

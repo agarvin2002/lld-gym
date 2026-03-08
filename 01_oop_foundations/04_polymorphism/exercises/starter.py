@@ -1,14 +1,23 @@
 """
-Starter: Polymorphic Discount System
-=====================================
+WHAT YOU'RE BUILDING
+--------------------
+You are building a discount system for an online shop.
 
-Complete all the TODOs below.
+There are different types of discounts:
+  NoDiscount            — price stays the same
+  PercentageDiscount    — e.g. 20% off → ₹100 becomes ₹80
+  FixedDiscount         — e.g. ₹10 off → ₹50 becomes ₹40 (never goes below ₹0)
+  BuyOneGetOneDiscount  — pay for one, get one free → price is halved
 
-Run the tests with:
+An Order holds a price and a discount. You call order.final_price() and it applies
+whichever discount is set — WITHOUT checking the type using if/elif.
+
+TIP: This is the Strategy Pattern. You'll use it in every LLD problem where
+the behaviour can change at runtime. Example: hotel pricing (peak vs off-peak),
+payment gateways (Razorpay vs Paytm), vehicle fee calculation.
+
+HOW TO RUN TESTS
     pytest tests.py -v
-
-The test file imports from this module, so keep all class names exactly
-as they are defined here.
 """
 
 from __future__ import annotations
@@ -17,64 +26,43 @@ from abc import ABC, abstractmethod
 
 
 # ---------------------------------------------------------------------------
-# Step 1: Define the Discount interface
+# The common interface — every discount must implement apply()
 # ---------------------------------------------------------------------------
 
 class Discount(ABC):
     """
     Abstract base for all discount types.
-
-    Every discount must implement apply(), which takes a price and returns
-    the discounted price.
-
-    Why ABC here?
-    - Makes the interface explicit and enforced by Python
-    - Instantiating Discount directly raises TypeError
-    - Type checkers (mypy, pyright) understand the relationship
-
-    Alternative: typing.Protocol (no inheritance required — see example2)
+    Every discount must implement apply(price) → discounted_price.
     """
 
     @abstractmethod
     def apply(self, price: float) -> float:
         """
         Apply this discount to the given price.
-
-        Args:
-            price: The original price (must be >= 0).
-
-        Returns:
-            The price after discount (must be >= 0).
+        Returns the price after discount (never negative).
         """
-        # TODO: This is an abstract method — no implementation needed here
         ...
 
 
 # ---------------------------------------------------------------------------
-# Step 2: NoDiscount
+# NoDiscount — price does not change
 # ---------------------------------------------------------------------------
 
 class NoDiscount(Discount):
-    """
-    A discount that changes nothing.
-
-    This is the Null Object pattern applied to discounts. Instead of
-    checking 'if discount is None' everywhere, use NoDiscount() as the
-    default — the interface remains consistent.
-    """
+    """Use this when there is no discount. Returns price unchanged."""
 
     def apply(self, price: float) -> float:
-        # TODO: Return the price unchanged
-        raise NotImplementedError
+        # No discount — return the price as-is
+        return price
 
 
 # ---------------------------------------------------------------------------
-# Step 3: PercentageDiscount
+# PercentageDiscount — e.g. 20% off
 # ---------------------------------------------------------------------------
 
 class PercentageDiscount(Discount):
     """
-    Reduces the price by a given percentage.
+    Reduces the price by a percentage.
 
     Example:
         PercentageDiscount(20).apply(100.0) → 80.0
@@ -83,117 +71,88 @@ class PercentageDiscount(Discount):
     """
 
     def __init__(self, percent: float) -> None:
-        """
-        Args:
-            percent: The discount percentage (0 to 100 inclusive).
-        """
-        # TODO: Validate that percent is between 0 and 100 (inclusive).
-        # Raise ValueError if it is out of range.
-        # Store the percent value.
-        raise NotImplementedError
+        # percent must be between 0 and 100 (inclusive)
+        if not 0 <= percent <= 100:
+            raise ValueError(
+                f"percent must be between 0 and 100, got {percent}"
+            )
+        self.percent = percent
 
     def apply(self, price: float) -> float:
-        # TODO: Calculate and return (price * (1 - percent/100))
-        raise NotImplementedError
+        # Formula: price × (1 - percent/100)
+        return price * (1 - self.percent / 100)
 
 
 # ---------------------------------------------------------------------------
-# Step 4: FixedDiscount
+# FixedDiscount — e.g. ₹10 off, but never below ₹0
 # ---------------------------------------------------------------------------
 
 class FixedDiscount(Discount):
     """
-    Subtracts a fixed dollar amount from the price.
-
-    The result is clamped to 0.0 — it can never go negative.
+    Subtracts a fixed amount from the price.
+    Result is clamped to 0 — price never goes negative.
 
     Example:
         FixedDiscount(10).apply(50.0) → 40.0
         FixedDiscount(10).apply(8.0)  → 0.0   (not -2.0)
-        FixedDiscount(10).apply(10.0) → 0.0
     """
 
     def __init__(self, amount: float) -> None:
-        """
-        Args:
-            amount: The fixed amount to subtract (must be >= 0).
-        """
-        # TODO: Validate that amount is non-negative.
-        # Raise ValueError if amount < 0.
-        # Store the amount value.
-        raise NotImplementedError
+        # amount must be >= 0
+        if amount < 0:
+            raise ValueError(f"amount must be >= 0, got {amount}")
+        self.amount = amount
 
     def apply(self, price: float) -> float:
-        # TODO: Subtract self.amount from price, but never go below 0.
-        # Hint: max(0.0, price - self.amount)
-        raise NotImplementedError
+        # Subtract amount but never go below 0
+        return max(0.0, price - self.amount)
 
 
 # ---------------------------------------------------------------------------
-# Step 5: BuyOneGetOneDiscount
+# BuyOneGetOneDiscount — pay for one, get one free
 # ---------------------------------------------------------------------------
 
 class BuyOneGetOneDiscount(Discount):
     """
-    Buy-one-get-one-free: the customer pays half price.
-
-    Think of it as: you buy 2 items but pay for 1.
-    So the per-item price is halved.
+    Buy one get one free: customer pays for 1, gets 2.
+    So the effective price per item is halved.
 
     Example:
         BuyOneGetOneDiscount().apply(60.0) → 30.0
-        BuyOneGetOneDiscount().apply(99.0) → 49.5
     """
 
     def apply(self, price: float) -> float:
-        # TODO: Return price / 2
-        raise NotImplementedError
+        return price / 2
 
 
 # ---------------------------------------------------------------------------
-# Step 6: Order
+# Order — holds a price and a discount strategy
 # ---------------------------------------------------------------------------
 
 class Order:
     """
-    Represents a customer order with a price and a discount strategy.
+    An order with a price and a discount.
 
-    The Order does not know (or care) which specific Discount is applied.
-    It just calls discount.apply(price) — that is polymorphism in action.
+    TIP: Order does NOT know which Discount type it has.
+    It just calls discount.apply(price). This is polymorphism.
+    No isinstance() checks. No if/elif chains.
     """
 
     def __init__(self, price: float, discount: Discount) -> None:
-        """
-        Args:
-            price:    The original price of the order (must be > 0).
-            discount: Any Discount implementation to apply.
-        """
-        # TODO: Validate that price > 0. Raise ValueError if not.
-        # TODO: Store price and discount as instance attributes.
-        raise NotImplementedError
+        # price must be > 0
+        if price <= 0:
+            raise ValueError(f"price must be > 0, got {price}")
+        self.price = price
+        self.discount = discount
 
     def final_price(self) -> float:
-        """
-        Apply the current discount to the original price.
-
-        Returns:
-            The price after discount.
-        """
-        # TODO: Return self.discount.apply(self.price)
-        # No isinstance() allowed here!
-        raise NotImplementedError
+        """Apply the current discount and return the final price."""
+        # TIP: this is the key line — one call, works for ALL discount types
+        return self.discount.apply(self.price)
 
     def apply_discount(self, new_discount: Discount) -> None:
-        """
-        Replace the current discount strategy.
-
-        This is the Strategy pattern: swap the algorithm at runtime.
-
-        Args:
-            new_discount: The new Discount to use going forward.
-        """
-        # TODO: Replace self.discount with new_discount
-        raise NotImplementedError
+        """Change the discount. The price itself does not change."""
+        self.discount = new_discount
 
     def __repr__(self) -> str:
         return (

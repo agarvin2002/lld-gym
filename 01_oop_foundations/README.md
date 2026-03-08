@@ -12,7 +12,7 @@ At its core, OOP answers a simple question: *who owns this data, and who is resp
 
 Low-Level Design is about translating a system's requirements into **concrete classes, interfaces, and relationships**. OOP is the primary tool for this translation. Here's why it matters:
 
-- **Modeling the real world**: LLD interviews and production systems ask you to model entities (User, Order, Payment, Vehicle). Classes map naturally to these concepts.
+- **Modeling the real world**: Production systems and LLD problems ask you to model entities (User, Order, Payment, Vehicle). Classes map naturally to these concepts.
 - **Encapsulation enforces contracts**: When a class owns its data and controls how it's modified, you prevent invalid states. A `BankAccount` that validates withdrawals is safer than a raw dict anyone can mutate.
 - **Inheritance and polymorphism enable extensibility**: You can add a new `PaymentMethod` without rewriting existing code if your design uses the right abstractions.
 - **Design patterns are OOP patterns**: Every GoF pattern (Strategy, Observer, Factory, etc.) is expressed through classes and their relationships. You need fluency with OOP before patterns make sense.
@@ -27,7 +27,7 @@ In short: **you cannot do LLD without OOP**. This module builds the foundation e
 |---|-------|-------------|------|
 | 01 | Classes and Objects | Defining classes, creating objects, dunder methods, dataclasses | [01_classes_and_objects/](01_classes_and_objects/) |
 | 02 | Encapsulation | Private attributes, properties, validation, information hiding | [02_encapsulation/](02_encapsulation/) |
-| 03 | Inheritance | Single/multiple inheritance, `super()`, MRO, mixins | [03_inheritance/](03_inheritance/) |
+| 03 | Inheritance | Single inheritance, `super()`, method overriding | [03_inheritance/](03_inheritance/) |
 | 04 | Polymorphism | Method overriding, duck typing, abstract base classes | [04_polymorphism/](04_polymorphism/) |
 | 05 | Abstraction | Abstract classes, interfaces in Python, designing contracts | [05_abstraction/](05_abstraction/) |
 
@@ -92,16 +92,15 @@ python3 01_classes_and_objects/examples/example1_basic_class.py
 
 ---
 
-## A Note on Depth vs. Breadth
+## A Note on Scope
 
-This module goes **deeper** than typical tutorials. You will encounter:
-- Python's data model (`__dunder__` methods)
-- Name mangling for private attributes
-- Method Resolution Order (MRO)
-- The difference between `__str__` and `__repr__`
-- When to use inheritance vs composition
+This module focuses on the OOP patterns that appear most often in real-world system design:
+- Defining clean classes with `__init__`, `__repr__`, and `__str__`
+- Using `@property` to validate and protect object state
+- Building class hierarchies with `super()` and method overriding
+- Designing contracts with `ABC` and `@abstractmethod`
 
-This depth is intentional. Interviewers ask about these details, and production bugs often come from not understanding them.
+Each topic also includes an advanced example file covering additional Python features (dataclasses, duck typing, mixins) for learners who want to go further.
 
 ---
 
@@ -113,4 +112,4 @@ After completing this module you should be able to:
 2. Use encapsulation to protect object state with properties and validation
 3. Build class hierarchies with inheritance and use `super()` correctly
 4. Recognize when inheritance is appropriate vs. when composition is better
-5. Apply these concepts immediately to LLD interview problems
+5. Apply these concepts to the LLD problems in Module 04

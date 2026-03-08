@@ -1,105 +1,94 @@
 # Inheritance
 
-## What Is It?
-Inheritance lets a class **acquire attributes and methods** from another class. The child class (subclass) is a specialization of the parent (superclass) — an "is-a" relationship.
+## What is it?
 
-## Real-World Analogy
-Animal → Mammal → Dog → Labrador
+Inheritance means: **one class can get everything from another class.**
 
-Every Labrador is a Dog. Every Dog is a Mammal. Every Mammal is an Animal.
-A Labrador inherits traits (warm-blooded, has fur) from all ancestors, but also adds specifics (friendly, retrieves things).
+The class that shares its things is called the **parent** (or base class).
+The class that takes those things is called the **child** (or subclass).
 
-## Why It Matters in LLD
-- **Code reuse**: common logic lives once in the base class
-- **Polymorphism foundation**: you can treat all `Shape` objects uniformly
-- **Model real hierarchies**: Vehicle → Car + Truck reflects the domain naturally
+Think of it like this:
+- A Vehicle has wheels and can move.
+- A Car is a Vehicle. So a Car also has wheels and can move.
+- A Car also has its own things (like a music system).
 
-## Python Syntax
+You do not rewrite the wheel code. The Car just **inherits** it from Vehicle.
 
-```python
-class Animal:
-    def __init__(self, name: str) -> None:
-        self.name = name
+---
 
-    def breathe(self) -> str:
-        return f"{self.name} breathes"
-
-class Dog(Animal):
-    def __init__(self, name: str, breed: str) -> None:
-        super().__init__(name)  # call parent __init__ first!
-        self.breed = breed
-
-    def bark(self) -> str:
-        return "Woof!"
-```
-
-### `super()` — Always Call It
-`super().__init__()` ensures the parent class is properly initialized. Forgetting it is a common bug — parent attributes won't exist.
-
-### MRO (Method Resolution Order)
-Python uses **C3 linearization** to determine which method to call in multiple inheritance:
+## See it in code
 
 ```python
-class A: pass
-class B(A): pass
-class C(A): pass
-class D(B, C): pass  # MRO: D → B → C → A
-
-print(D.__mro__)
-# (<class 'D'>, <class 'B'>, <class 'C'>, <class 'A'>, <class 'object'>)
-```
-
-### Checking Types
-```python
-isinstance(my_dog, Dog)     # True
-isinstance(my_dog, Animal)  # True (Dog is-a Animal)
-issubclass(Dog, Animal)     # True
-```
-
-## When to Use Inheritance vs Composition
-
-| Use Inheritance | Use Composition |
-|-----------------|-----------------|
-| True "is-a" relationship | "has-a" relationship |
-| Share interface + behavior | Share behavior only |
-| Hierarchy ≤ 3 levels deep | Complex/flexible behavior |
-| Example: Car is-a Vehicle | Example: Car has-a Engine |
-
-**Rule of thumb**: Prefer composition. Only use inheritance when the "is-a" relationship is stable and genuine.
-
-## Quick Example
-
-```python
-from abc import ABC, abstractmethod
-
-class Vehicle(ABC):
-    def __init__(self, brand: str, year: int) -> None:
+class Vehicle:
+    def __init__(self, brand: str, speed: int):
         self.brand = brand
-        self.year = year
+        self.speed = speed
 
-    @abstractmethod
-    def fuel_type(self) -> str: ...
+    def move(self) -> str:
+        return f"{self.brand} is moving at {self.speed} km/h"
 
-    def describe(self) -> str:
-        return f"{self.year} {self.brand} ({self.fuel_type()})"
+class Car(Vehicle):             # Car inherits from Vehicle
+    def __init__(self, brand: str, speed: int, num_doors: int):
+        super().__init__(brand, speed)  # call Vehicle's __init__ first
+        self.num_doors = num_doors      # Car's own new attribute
 
-class Car(Vehicle):
-    def fuel_type(self) -> str:
-        return "Gasoline"
+    def honk(self) -> str:
+        return f"{self.brand}: Beep beep!"
 
-class ElectricCar(Vehicle):
-    def fuel_type(self) -> str:
-        return "Electric"
-
-tesla = ElectricCar("Tesla", 2024)
-print(tesla.describe())  # 2024 Tesla (Electric)
-print(isinstance(tesla, Vehicle))  # True
+car = Car("Maruti", 80, 4)
+print(car.move())   # Maruti is moving at 80 km/h  ← from Vehicle
+print(car.honk())   # Maruti: Beep beep!           ← Car's own method
 ```
 
-## Common Mistakes
+**`super().__init__(...)`** — this calls the parent's `__init__`. Always call this first in the child's `__init__`. If you forget, the parent's attributes won't be set up.
 
-1. **Forgetting `super().__init__()`** — parent attributes won't be set
-2. **Deep hierarchies** — max 3 levels; deeper = hard to understand
-3. **Inheriting just for code reuse** — use composition or mixins instead
-4. **Overriding with incompatible behavior** — violates Liskov Substitution Principle
+---
 
+## Overriding a method
+
+The child can change how a parent method works:
+
+```python
+class ElectricCar(Car):
+    def move(self) -> str:
+        return f"{self.brand} is moving silently at {self.speed} km/h"
+
+e = ElectricCar("Tata Nexon EV", 120, 4)
+print(e.move())  # Tata Nexon EV is moving silently at 120 km/h
+```
+
+Same method name (`move`), different behaviour. This is called **overriding**.
+
+---
+
+## Real-world applications
+
+- Almost every multi-class system has a base class. Example: `Vehicle → Car, Truck, Bike`.
+- Always call `super().__init__()` in the child's `__init__` — this is a common source of bugs when forgotten.
+- Use inheritance when classes share real common behaviour, not just to avoid repeating code.
+
+---
+
+## The one mistake beginners make
+
+**Forgetting `super().__init__()`.**
+
+```python
+class Car(Vehicle):
+    def __init__(self, brand, speed, num_doors):
+        # forgot super().__init__() !
+        self.num_doors = num_doors
+
+car = Car("Maruti", 80, 4)
+print(car.speed)  # AttributeError! speed was never set
+```
+
+Always call `super().__init__(...)` as the first line in the child's `__init__`.
+
+---
+
+## What to do next
+
+1. Open `examples/example1_single_inheritance.py` — see shapes using inheritance
+2. (Optional, advanced) `examples/example2_mro_and_super.py` — how Python handles multiple parents
+3. Do `exercises/starter.py` — build an Employee hierarchy

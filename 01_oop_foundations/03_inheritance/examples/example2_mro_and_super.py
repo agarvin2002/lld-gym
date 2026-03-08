@@ -1,107 +1,91 @@
 """
-Example 2: MRO (Method Resolution Order) and Mixins
+example2_mro_and_super.py
+--------------------------
+Advanced topic — covers Mixins and how super() behaves with multiple parents.
 
-Demonstrates:
-- Multiple inheritance with mixins
-- super() following MRO (not just direct parent)
-- __mro__ inspection
-- Diamond inheritance resolution
-- Practical mixin pattern for LLD
+What's in here:
+  - Mixin — a small class that adds one feature to any class that includes it
+  - super() works cooperatively whether you have one parent or multiple
+
+Run this file directly:
+    python3 example2_mro_and_super.py
 """
+
 from datetime import datetime
 
 
-# ─── Mixin Classes ────────────────────────────────────────────────
+# =============================================================================
+# Mixin — a class that adds one extra feature without being a full parent class
+# =============================================================================
+#
+# A mixin is a small class that does ONE thing.
+# You mix it into other classes to give them that feature.
+# It is like a plugin.
 
 class LoggingMixin:
-    """Adds logging capability to any class."""
+    """
+    Adds a log() method to any class.
+    You mix this in if you want logging.
+    """
 
     def log(self, message: str) -> None:
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] {self.__class__.__name__}: {message}")
+        time = datetime.now().strftime("%H:%M:%S")
+        print(f"[{time}] {self.__class__.__name__}: {message}")
 
 
-class TimestampMixin:
-    """Adds created_at / updated_at tracking."""
+# =============================================================================
+# Using the mixin
+# =============================================================================
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)  # pass remaining kwargs up the chain
-        self.created_at: datetime = datetime.now()
-        self.updated_at: datetime = datetime.now()
-
-    def touch(self) -> None:
-        self.updated_at = datetime.now()
-
-
-# ─── Real Class Using Mixins ──────────────────────────────────────
-
-class Employee(LoggingMixin, TimestampMixin):
-    """Employee that gains logging and timestamps via mixins."""
+class Employee(LoggingMixin):
+    """
+    Employee gains log() from LoggingMixin.
+    super() in __init__ calls LoggingMixin (then object) automatically.
+    """
 
     def __init__(self, name: str, role: str) -> None:
-        super().__init__()  # calls TimestampMixin.__init__ via MRO
+        super().__init__()    # good practice — always call super().__init__()
         self.name = name
         self.role = role
 
     def promote(self, new_role: str) -> None:
-        self.log(f"Promoted from {self.role} to {new_role}")
+        self.log(f"{self.name} promoted from {self.role} to {new_role}")
         self.role = new_role
-        self.touch()  # update timestamp
 
 
-# ─── MRO Inspection ──────────────────────────────────────────────
+class OrderService(LoggingMixin):
+    """
+    A completely different class that also uses LoggingMixin.
+    Same mixin, different class — no code duplication.
+    """
 
-def show_mro(cls) -> None:
-    print(f"\nMRO for {cls.__name__}:")
-    for i, c in enumerate(cls.__mro__):
-        print(f"  {i}: {c.__name__}")
+    def __init__(self) -> None:
+        super().__init__()
+        self._orders: list[str] = []
+
+    def place_order(self, order_id: str) -> None:
+        self._orders.append(order_id)
+        self.log(f"Order placed: {order_id}")
 
 
-# ─── Diamond Inheritance ──────────────────────────────────────────
-#
-#       A
-#      / \
-#     B   C
-#      \ /
-#       D
-#
-# Without MRO, D.method() would call A.method() twice — the "diamond problem".
-# Python's C3 linearization ensures each class is only visited once.
-
-class A:
-    def greet(self) -> str:
-        return "Hello from A"
-
-class B(A):
-    def greet(self) -> str:
-        return f"B → {super().greet()}"  # super() follows MRO, not just A
-
-class C(A):
-    def greet(self) -> str:
-        return f"C → {super().greet()}"  # super() follows MRO
-
-class D(B, C):
-    def greet(self) -> str:
-        return f"D → {super().greet()}"  # MRO: D → B → C → A
-
+# =============================================================================
+# RUN THIS TO SEE IT IN ACTION
+# =============================================================================
 
 if __name__ == "__main__":
-    print("=== Mixin Demo ===")
-    emp = Employee("Alice", "Engineer")
-    emp.log("Starting work")
+    print("=== Mixin Demo ===\n")
+
+    emp = Employee("Priya", "Engineer")
+    emp.log("Starting work today")
     emp.promote("Senior Engineer")
-    print(f"Created at: {emp.created_at}")
-    print(f"Updated at: {emp.updated_at}")
 
-    show_mro(Employee)
+    print()
 
-    print("\n=== Diamond Inheritance ===")
-    show_mro(D)
-    d = D()
-    print(f"\nd.greet() = '{d.greet()}'")
-    # Output shows each class called once: D → B → C → A
+    service = OrderService()
+    service.place_order("ORD-001")
+    service.place_order("ORD-002")
 
-    print("\n=== Key takeaway ===")
-    print("super() does NOT mean 'call the direct parent'.")
-    print("It means 'call the next class in the MRO'.")
-    print("This ensures correct cooperative multiple inheritance.")
+    print("\nKey takeaway:")
+    print("A mixin is a small class that adds one feature.")
+    print("Different unrelated classes can use the same mixin.")
+    print("This is an advanced pattern — useful once you are comfortable with basic inheritance.")
