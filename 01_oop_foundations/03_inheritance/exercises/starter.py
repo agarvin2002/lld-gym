@@ -115,3 +115,17 @@ class Director(Manager):
     def get_total_compensation(self) -> float:
         # Director gets base salary + 40% bonus
         return round(self.base_salary * 1.40, 2)
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/03_inheritance/exercises/tests.py -v
+#
+# Run all OOP exercises at once:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/ -v
+# =============================================================================

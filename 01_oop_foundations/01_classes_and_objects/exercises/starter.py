@@ -142,3 +142,17 @@ class ShoppingCart:
         # TODO: Return True if the product is in the cart
         # This lets you do: "if product in cart"
         pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/01_classes_and_objects/exercises/tests.py -v
+#
+# Run all OOP exercises at once:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/ -v
+# =============================================================================

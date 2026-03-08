@@ -164,3 +164,17 @@ class DataRepository:
         """Check if a key exists."""
         # TODO: Call self._backend.exists(key) and return the result
         pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/05_abstraction/exercises/tests.py -v
+#
+# Run all OOP exercises at once:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/ -v
+# =============================================================================

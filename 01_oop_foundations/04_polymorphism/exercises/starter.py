@@ -160,3 +160,17 @@ class Order:
             f"discount={type(self.discount).__name__}, "
             f"final={self.final_price():.2f})"
         )
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/04_polymorphism/exercises/tests.py -v
+#
+# Run all OOP exercises at once:
+#   /tmp/lld_venv/bin/pytest 01_oop_foundations/ -v
+# =============================================================================
