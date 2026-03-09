@@ -1,28 +1,22 @@
+# Advanced topic — Strategy pattern as the primary way to achieve OCP in Python
 """
-Example 2: Open/Closed Principle — Refactored with Strategy Pattern
-
-Shows how to add new discount types without modifying existing code.
-Contrast this with example1_violation.py where every new type requires
-modifying the central PriceCalculator.
+OCP Fix: each discount type is a separate class.
+Adding a new type means writing a new class — PriceCalculator never changes.
 """
 from abc import ABC, abstractmethod
 
 
-# ─── Abstraction: The DiscountStrategy interface ──────────────────
-
 class DiscountStrategy(ABC):
-    """Each discount type is a separate class. To add a new type: add a new class."""
+    """Abstract base. Each discount type is a subclass."""
 
     @abstractmethod
     def apply(self, price: float) -> float:
-        """Apply discount to price and return new price."""
+        """Apply discount to price and return new (lower) price."""
         ...
 
     def __repr__(self) -> str:
         return self.__class__.__name__
 
-
-# ─── Concrete Strategies ─────────────────────────────────────────
 
 class NoDiscount(DiscountStrategy):
     def apply(self, price: float) -> float:
@@ -48,14 +42,14 @@ class FixedDiscount(DiscountStrategy):
 
 
 class BuyOneGetOneDiscount(DiscountStrategy):
-    """Second item is free — effectively half price."""
+    """Second item free — effectively half price."""
 
     def apply(self, price: float) -> float:
         return price / 2
 
 
 class SeasonalDiscount(DiscountStrategy):
-    """Example of a NEW strategy added WITHOUT changing PriceCalculator."""
+    """Added as a NEW class — PriceCalculator was not touched."""
 
     def __init__(self, seasonal_percent: float) -> None:
         self.seasonal_percent = seasonal_percent
@@ -64,13 +58,11 @@ class SeasonalDiscount(DiscountStrategy):
         return price * (1 - self.seasonal_percent / 100)
 
 
-# ─── Closed for modification: PriceCalculator never changes ──────
-
 class PriceCalculator:
     """
     Calculates discounted price using any DiscountStrategy.
-    NEVER needs to change when new discount types are added.
     Open for extension (new strategies), closed for modification.
+    This class never changes when new discount types are added.
     """
 
     def __init__(self, strategy: DiscountStrategy) -> None:
@@ -80,38 +72,26 @@ class PriceCalculator:
         self._strategy = strategy
 
     def calculate(self, original_price: float) -> float:
-        discounted = self._strategy.apply(original_price)
-        return round(discounted, 2)
-
-    def show_savings(self, original_price: float) -> None:
-        final = self.calculate(original_price)
-        savings = original_price - final
-        print(
-            f"Strategy: {self._strategy} | "
-            f"Original: ${original_price:.2f} | "
-            f"Final: ${final:.2f} | "
-            f"Savings: ${savings:.2f}"
-        )
+        return round(self._strategy.apply(original_price), 2)
 
 
 if __name__ == "__main__":
     price = 100.0
+    calc = PriceCalculator(NoDiscount())
 
     strategies = [
         NoDiscount(),
         PercentageDiscount(20),
         FixedDiscount(15),
         BuyOneGetOneDiscount(),
-        SeasonalDiscount(30),  # added without touching PriceCalculator
+        SeasonalDiscount(30),
     ]
 
-    calc = PriceCalculator(NoDiscount())
-
-    print("=== OCP Demo: PriceCalculator never changes ===\n")
+    print("=== OCP: PriceCalculator never changes ===\n")
     for strategy in strategies:
         calc.set_strategy(strategy)
-        calc.show_savings(price)
+        final = calc.calculate(price)
+        print(f"  {strategy}: ${price:.2f} → ${final:.2f}")
 
-    print("\n=== Key insight ===")
-    print("Adding SeasonalDiscount required ONLY writing a new class.")
+    print("\nAdding SeasonalDiscount required only writing a new class.")
     print("PriceCalculator was not touched. That's OCP.")

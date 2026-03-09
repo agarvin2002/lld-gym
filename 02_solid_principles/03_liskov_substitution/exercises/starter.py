@@ -1,10 +1,17 @@
 """
-Exercise: Payment Processing Hierarchy (LSP)
+WHAT YOU'RE BUILDING
+====================
+A payment hierarchy where every payment type is a safe substitute
+for the base PaymentMethod interface.
 
-Design a payment hierarchy where every subtype is truly substitutable.
-The tricky part: GiftCard cannot be refunded — design accordingly.
+The key design decision: GiftCard can process payments but CANNOT
+be refunded. So GiftCard inherits PaymentMethod only — not RefundablePayment.
+This is LSP: never inherit an interface you cannot fully honor.
 
-Fill in the TODOs. Run: pytest tests.py -v
+CreditCard and DebitCard both support refunds, so they inherit
+from RefundablePayment (which extends PaymentMethod).
+
+Fill in the TODOs below. Run the tests to verify your work.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -21,25 +28,17 @@ class TransactionResult:
 class PaymentMethod(ABC):
     """
     Base interface — ALL payment methods can process a payment.
-    Note: NOT all payment methods support refunds (see RefundablePayment).
+    Not all payment methods support refunds (see RefundablePayment).
     """
 
     @abstractmethod
     def process(self, amount: float) -> TransactionResult:
-        """
-        Process a payment of the given amount.
-
-        Args:
-            amount: positive float representing amount to charge
-
-        Returns:
-            TransactionResult with success=True on success
-        """
+        """Charge the given amount. Return TransactionResult with success=True on success."""
         ...
 
     @abstractmethod
     def get_payment_type(self) -> str:
-        """Return a human-readable name for this payment type."""
+        """Return a human-readable name for this payment type (e.g. 'CreditCard')."""
         ...
 
 
@@ -51,12 +50,7 @@ class RefundablePayment(PaymentMethod, ABC):
 
     @abstractmethod
     def refund(self, transaction_id: str) -> bool:
-        """
-        Refund a previous transaction.
-
-        Returns:
-            True if refund was successful, False otherwise
-        """
+        """Refund a previous transaction. Return True if successful."""
         ...
 
 
@@ -64,19 +58,19 @@ class CreditCard(RefundablePayment):
     """Credit card supports both payment and refunds."""
 
     def __init__(self, card_number: str, holder_name: str) -> None:
-        # TODO: store card_number, holder_name
+        # TODO: Store card_number as self.card_number and holder_name as self.holder_name
         pass
 
     def process(self, amount: float) -> TransactionResult:
-        # TODO: return TransactionResult(success=True, transaction_id="CC-{amount}", amount=amount)
+        # TODO: Return TransactionResult(success=True, transaction_id=f"CC-{amount}", amount=amount)
         pass
 
     def refund(self, transaction_id: str) -> bool:
-        # TODO: return True (simulate successful refund)
+        # TODO: Return True (simulate a successful refund)
         pass
 
     def get_payment_type(self) -> str:
-        # TODO: return "CreditCard"
+        # TODO: Return "CreditCard"
         pass
 
 
@@ -84,19 +78,19 @@ class DebitCard(RefundablePayment):
     """Debit card supports both payment and refunds."""
 
     def __init__(self, card_number: str) -> None:
-        # TODO: store card_number
+        # TODO: Store card_number as self.card_number
         pass
 
     def process(self, amount: float) -> TransactionResult:
-        # TODO: return TransactionResult(success=True, transaction_id="DC-{amount}", amount=amount)
+        # TODO: Return TransactionResult(success=True, transaction_id=f"DC-{amount}", amount=amount)
         pass
 
     def refund(self, transaction_id: str) -> bool:
-        # TODO: return True
+        # TODO: Return True
         pass
 
     def get_payment_type(self) -> str:
-        # TODO: return "DebitCard"
+        # TODO: Return "DebitCard"
         pass
 
 
@@ -104,19 +98,36 @@ class GiftCard(PaymentMethod):
     """
     Gift card can process payments but CANNOT be refunded.
     Correctly inherits PaymentMethod only — NOT RefundablePayment.
-    This is the LSP-compliant design.
+    This is the LSP-compliant design: don't inherit what you can't honor.
     """
 
     def __init__(self, card_code: str, balance: float) -> None:
-        # TODO: store card_code, balance
+        # TODO: Store card_code as self.card_code and balance as self.balance
         pass
 
     def process(self, amount: float) -> TransactionResult:
-        # TODO: check if balance >= amount
-        # If yes: deduct from balance, return success TransactionResult
-        # If no: return TransactionResult(success=False, ...)
+        # TODO: Check if self.balance >= amount
+        #   If yes: subtract amount from self.balance, return success TransactionResult
+        #           transaction_id=f"GC-{amount}", amount=amount
+        #   If no:  return TransactionResult(success=False, transaction_id="", amount=amount,
+        #                                    message="Insufficient balance")
+        # HINT: This is the only class that needs balance-checking logic.
         pass
 
     def get_payment_type(self) -> str:
-        # TODO: return "GiftCard"
+        # TODO: Return "GiftCard"
         pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 02_solid_principles/03_liskov_substitution/exercises/tests.py -v
+#
+# Run all SOLID exercises at once:
+#   /tmp/lld_venv/bin/pytest 02_solid_principles/ -v
+# =============================================================================

@@ -2,23 +2,19 @@
 
 ## Overview
 
-SOLID is an acronym for five foundational object-oriented design principles introduced by Robert C. Martin (Uncle Bob). These principles guide developers toward writing software that is easier to maintain, extend, and test — especially as systems grow in complexity.
-
-In the context of Low-Level Design (LLD), SOLID principles are not abstract theory. They are practical tools that determine the quality of your class hierarchies, service layers, and module boundaries. Interviewers at top tech companies evaluate SOLID fluency as a proxy for design maturity.
+SOLID is an acronym for five object-oriented design principles introduced by Robert C. Martin. These principles help you write software that is easier to maintain, extend, and test as systems grow in complexity.
 
 ---
 
-## Why SOLID Matters for LLD
+## Why SOLID Matters
 
-When you design a system at the class and interface level, every design decision compounds. A violation of one principle today means:
+Every design decision at the class and interface level compounds over time. Violating these principles leads to:
 
-- **Hard-to-test code** — you cannot unit test a class that hardcodes its own dependencies
+- **Hard-to-test code** — a class that hardcodes its own dependencies cannot be unit tested
 - **Fragile extensions** — adding a feature breaks existing, working functionality
 - **Unreliable hierarchies** — a subclass that surprises callers destroys trust in your API
 - **Unnecessary coupling** — one change ripples through unrelated modules
-- **Difficult onboarding** — god classes with hundreds of lines are impossible to reason about quickly
-
-SOLID gives you a vocabulary and a checklist for avoiding these problems.
+- **Difficult onboarding** — god classes with hundreds of lines are hard to reason about
 
 ---
 
@@ -38,14 +34,14 @@ SOLID gives you a vocabulary and a checklist for avoiding these problems.
 
 ```
 XX_principle_name/
-├── theory.md                  # Deep-dive explanation with analogies and Python-specific guidance
+├── theory.md                  # Explanation with analogy, minimal code, and real-world uses
 ├── examples/
-│   ├── example1_violation.py  # Shows the anti-pattern clearly with comments
-│   └── example2_refactored.py # Shows the correct approach
+│   ├── example1_*.py          # Shows the anti-pattern clearly
+│   └── example2_*.py          # Advanced topic — shows the correct approach
 └── exercises/
     ├── problem.md             # Exercise description
     ├── starter.py             # Skeleton code to fill in
-    ├── tests.py               # Tests that must pass with your solution
+    ├── tests.py               # Tests that must pass
     └── solution/
         ├── solution.py        # Complete working solution
         └── explanation.md     # Explanation of design decisions
@@ -55,18 +51,6 @@ XX_principle_name/
 
 ## How the Five Principles Work Together
 
-SOLID principles are not independent silos — they reinforce each other:
-
-**SRP + ISP** work together on the *granularity* dimension. SRP tells you to break apart classes with multiple responsibilities. ISP tells you to break apart interfaces that are too fat. Both reduce coupling and increase cohesion.
-
-**OCP + LSP** work together on the *extension* dimension. OCP tells you to design so new behavior can be added without changing existing code. LSP tells you that any extension via inheritance must be a true behavioral substitute — otherwise your OCP extension breaks existing callers.
-
-**DIP + SRP** work together on the *dependency* dimension. DIP tells you that high-level modules should depend on abstractions. SRP ensures those abstractions stay focused — a fat interface used as an abstraction still causes problems.
-
-**DIP + OCP** are deeply linked. To make a class open for extension, you typically inject dependencies via interfaces (DIP). Then new behavior is added by providing new implementations of those interfaces — the existing class never changes.
-
-A practical mental model:
-
 ```
 SRP  → "What does this class do?" (answer should be one thing)
 OCP  → "How do I add new behavior?" (answer: extend, don't modify)
@@ -75,35 +59,54 @@ ISP  → "What does this interface expose?" (answer: only what the client needs)
 DIP  → "Who creates dependencies?" (answer: the caller, via injection)
 ```
 
+**SRP + ISP** both reduce coupling — one at the class level, one at the interface level.
+**OCP + LSP** both govern extension — OCP says add without modifying; LSP says extensions must be safe substitutes.
+**DIP + OCP** are deeply linked — injecting interfaces (DIP) is how you achieve extensibility (OCP).
+
+---
+
+## Putting It All Together: A Payment Service
+
+Consider designing a payment service that supports Razorpay, Paytm, and UPI.
+
+**SRP** — `PaymentService` only orchestrates. `OrderValidator`, `PaymentLogger`, and each gateway class each have one job. Changing the logging format touches only `PaymentLogger`.
+
+**OCP** — `RazorpayGateway`, `PaytmGateway`, and `UPIGateway` each implement `PaymentGatewayInterface`. Adding a new gateway is a new class — `PaymentService` is never modified.
+
+**LSP** — Every gateway is a safe substitute. Code that calls `gateway.charge(amount)` works correctly for any gateway. No gateway raises `NotImplementedError` for a method it cannot support.
+
+**ISP** — `RefundableGateway` is a separate interface from `PaymentGateway`. UPI (no refunds) implements only `PaymentGateway`. Credit card gateways implement both.
+
+**DIP** — `PaymentService.__init__` accepts `PaymentGatewayInterface`, not a concrete class. Tests inject `MockGateway`. Switching from Razorpay to Paytm requires no change to `PaymentService` — only the injected object changes.
+
+This pattern — one interface, multiple implementations, injected from outside — appears in every real system.
+
 ---
 
 ## Recommended Study Order
 
-1. Start with **SRP** — it is the most intuitive and sets the foundation for all others
-2. Move to **OCP** — you will naturally use polymorphism, which sets up LSP
-3. Study **LSP** — understand what correct inheritance looks like
-4. Study **ISP** — learn to design focused, composable interfaces
-5. Finish with **DIP** — bring it all together with dependency injection
-
-Each principle builds on the vocabulary and patterns introduced before it.
+1. **SRP** — most intuitive; sets the foundation
+2. **OCP** — introduces polymorphism patterns
+3. **LSP** — clarifies what correct inheritance looks like
+4. **ISP** — teaches focused, composable interfaces
+5. **DIP** — brings it all together with dependency injection
 
 ---
 
 ## Quick Reference: Violation Smells
 
-| Principle | Code Smell / Symptom |
-|-----------|----------------------|
-| SRP | Class name contains "And"; methods that don't use instance data; 200+ line classes |
-| OCP | `if/elif` chains that grow with every new feature type |
-| LSP | Overriding a method to raise `NotImplementedError`; empty overrides |
+| Principle | Code Smell |
+|-----------|------------|
+| SRP | Class name contains "And"; 200+ line classes |
+| OCP | `if/elif` chains that grow with every new type |
+| LSP | Overriding a method to raise `NotImplementedError` |
 | ISP | Implementing a method with `pass` to satisfy an interface |
-| DIP | `self.db = MySQLDatabase()` inside `__init__`; impossible to unit test without infrastructure |
+| DIP | `self.db = MySQLDatabase()` inside `__init__` |
 
 ---
 
 ## Prerequisites
 
 - Python 3.10+
-- Understanding of classes, inheritance, and abstract base classes
-- Familiarity with `abc.ABC` and `abc.abstractmethod`
-- Module 01 (OOP Fundamentals) recommended but not required
+- Classes, inheritance, and abstract base classes (`abc.ABC`, `@abstractmethod`)
+- Module 01 (OOP Foundations) recommended

@@ -87,6 +87,28 @@ Always call `super().__init__(...)` as the first line in the child's `__init__`.
 
 ---
 
+## When to use inheritance vs. composition
+
+Use inheritance when the relationship is a genuine **"is-a"**: a `Car` is a `Vehicle`. If you find yourself inheriting just to reuse a method, that's a sign the relationship is really **"has-a"** — and composition is the better fit.
+
+```python
+# Composition — Engine is not a Car, it's part of a Car
+class Engine:
+    def start(self) -> str:
+        return "Engine started"
+
+class Car:
+    def __init__(self):
+        self._engine = Engine()   # Car "has an" Engine
+
+    def start(self) -> str:
+        return self._engine.start()
+```
+
+A deeper discussion of when inheritance breaks down appears in `02_solid_principles/03_liskov_substitution/`.
+
+---
+
 ## What to do next
 
 1. Open `examples/example1_single_inheritance.py` — see shapes using inheritance

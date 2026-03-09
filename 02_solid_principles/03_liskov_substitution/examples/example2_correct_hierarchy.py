@@ -1,14 +1,16 @@
+# Advanced topic — designing class hierarchies where every subclass is a safe substitute
 """
-LSP Example 2: Correct Animal Hierarchy
-
-Shows how to design a hierarchy where every subtype is truly substitutable.
+LSP Correct Hierarchy: Animal system with no forced empty methods.
 Avoids the classic "Penguin can't fly" trap.
+
+Each animal only implements the interfaces it actually supports.
+No NotImplementedError traps. No surprised callers.
 """
 from abc import ABC, abstractmethod
 
 
 class Animal(ABC):
-    """Every animal can eat and breathe. Only these in the base."""
+    """Base interface — every animal can eat. Only universal behavior belongs here."""
 
     def __init__(self, name: str) -> None:
         self.name = name
@@ -34,15 +36,13 @@ class SwimmingAnimal(Animal, ABC):
     def swim(self) -> str: ...
 
 
-# ─── Concrete Animals ─────────────────────────────────────────────
-
 class Dog(Animal):
     def eat(self) -> str:
         return f"{self.name} eats dog food"
 
     def run(self) -> str:
         return f"{self.name} runs"
-    # No fly(), no swim() forced — Dog doesn't need them ✅
+    # No fly(), no swim() forced — Dog doesn't need them
 
 
 class Eagle(FlyingAnimal):
@@ -59,11 +59,11 @@ class Fish(SwimmingAnimal):
 
     def swim(self) -> str:
         return f"{self.name} swims upstream"
-    # No fly() forced — Fish doesn't need it ✅
+    # No fly() forced — Fish doesn't need it
 
 
 class Duck(FlyingAnimal, SwimmingAnimal):
-    """Duck can both fly and swim — correctly implements both interfaces."""
+    """Duck can both fly and swim — implements both interfaces correctly."""
 
     def eat(self) -> str:
         return f"{self.name} eats bread"
@@ -75,15 +75,13 @@ class Duck(FlyingAnimal, SwimmingAnimal):
         return f"{self.name} paddles on the pond"
 
 
-# ─── Functions that use correct interface ─────────────────────────
-
 def make_animal_eat(animal: Animal) -> None:
-    """Works with ANY Animal — Dog, Eagle, Fish, Duck."""
+    """Works with ANY Animal. Dog, Eagle, Fish, Duck are all safe substitutes."""
     print(animal.eat())
 
 
 def make_fly(flyer: FlyingAnimal) -> None:
-    """Only called with things that actually fly."""
+    """Only called with things that actually fly — no NotImplementedError surprises."""
     print(flyer.fly())
 
 
@@ -110,5 +108,4 @@ if __name__ == "__main__":
     for swimmer in [fish, duck]:
         make_swim(swimmer)
 
-    print("\n=== No forced empty methods ===")
-    print("Dog doesn't have fly() or swim() — no NotImplementedError traps ✅")
+    print("\nNo animal has an empty method or NotImplementedError.")

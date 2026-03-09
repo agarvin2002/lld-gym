@@ -3,6 +3,10 @@ ISP Example 1: Fat Interface Violation
 
 A Printer ABC forces ALL printer types to implement ALL functions —
 even ones they don't support.
+
+Real-world use: This pattern appears in media player frameworks where a
+single Player interface forces simple audio players to stub out video,
+download, and subtitle methods they'll never use.
 """
 from abc import ABC, abstractmethod
 

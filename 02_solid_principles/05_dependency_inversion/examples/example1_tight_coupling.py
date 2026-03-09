@@ -2,6 +2,12 @@
 DIP Example 1: Tight Coupling Violation
 
 UserService hardcodes all its dependencies — can't test, can't swap.
+
+Real-world use: This pattern appears in backend services (hotel booking,
+ride-sharing) where the service class directly instantiates the database
+and email client. When the team switches from MySQL to PostgreSQL or from
+Gmail to SendGrid, they must edit the business logic class itself — a DIP
+violation. See example2_with_di.py for the injected version.
 """
 
 

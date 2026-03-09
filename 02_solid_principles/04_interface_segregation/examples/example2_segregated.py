@@ -1,3 +1,4 @@
+# Advanced topic — splitting a fat interface into small, focused ABCs
 """
 ISP Example 2: Segregated Printer Interfaces
 

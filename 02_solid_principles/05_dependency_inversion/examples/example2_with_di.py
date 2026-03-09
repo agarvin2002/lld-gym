@@ -1,3 +1,4 @@
+# Advanced topic — constructor injection of abstractions to make services testable and swappable
 """
 DIP Example 2: Dependency Injection
 
@@ -12,9 +13,6 @@ from abc import ABC, abstractmethod
 class DatabaseInterface(ABC):
     @abstractmethod
     def query(self, sql: str) -> list: ...
-
-    @abstractmethod
-    def execute(self, sql: str) -> None: ...
 
 
 class EmailSenderInterface(ABC):
@@ -33,9 +31,6 @@ class MySQLDatabase(DatabaseInterface):
     def query(self, sql: str) -> list:
         return [{"id": 1, "name": "Alice"}]  # would use real MySQL
 
-    def execute(self, sql: str) -> None:
-        pass  # would execute real SQL
-
 
 class GmailSender(EmailSenderInterface):
     def send_email(self, to: str, subject: str, body: str) -> None:
@@ -47,17 +42,11 @@ class ConsoleLogger(LoggerInterface):
         print(f"[LOG] {message}")
 
 
-# ─── Test Doubles (for testing without real infrastructure) ───────
+# ─── Test Doubles (no real infrastructure needed) ─────────────────
 
 class MockDatabase(DatabaseInterface):
-    def __init__(self) -> None:
-        self.executed: list[str] = []
-
     def query(self, sql: str) -> list:
         return [{"id": 1, "name": "TestUser"}]
-
-    def execute(self, sql: str) -> None:
-        self.executed.append(sql)
 
 
 class MockEmailSender(EmailSenderInterface):
@@ -70,23 +59,18 @@ class MockEmailSender(EmailSenderInterface):
 
 class NullLogger(LoggerInterface):
     def log(self, message: str) -> None:
-        pass  # swallow all logs during tests
+        pass  # swallow logs during tests
 
 
 # ─── High-Level Module ─────────────────────────────────────────────
 
 class UserService:
     """
-    UserService depends ONLY on abstractions.
-    Never creates its own dependencies — they're injected.
+    Depends ONLY on abstractions. Never creates its own dependencies.
+    Swap MySQL → PostgreSQL or Gmail → SendGrid without touching this class.
     """
 
-    def __init__(
-        self,
-        db: DatabaseInterface,
-        email: EmailSenderInterface,
-        logger: LoggerInterface,
-    ) -> None:
+    def __init__(self, db: DatabaseInterface, email: EmailSenderInterface, logger: LoggerInterface) -> None:
         self._db = db
         self._email = email
         self._logger = logger
@@ -102,32 +86,15 @@ class UserService:
         return results[0] if results else None
 
 
-# ─── Factory for Production Setup ─────────────────────────────────
-
-def create_production_service() -> UserService:
-    return UserService(
-        db=MySQLDatabase(),
-        email=GmailSender(),
-        logger=ConsoleLogger(),
-    )
-
-
-def create_test_service() -> tuple[UserService, MockDatabase, MockEmailSender]:
-    db = MockDatabase()
-    email = MockEmailSender()
-    service = UserService(db=db, email=email, logger=NullLogger())
-    return service, db, email
-
-
 if __name__ == "__main__":
-    print("=== Production Setup ===")
-    prod_service = create_production_service()
-    user = prod_service.create_user("Alice", "alice@example.com")
-    print(f"Created: {user}")
+    # Production: real implementations injected
+    prod = UserService(db=MySQLDatabase(), email=GmailSender(), logger=ConsoleLogger())
+    print("=== Production ===")
+    print(prod.create_user("Alice", "alice@example.com"))
 
-    print("\n=== Test Setup (no real infrastructure) ===")
-    test_service, mock_db, mock_email = create_test_service()
-    user = test_service.create_user("Bob", "bob@test.com")
-    print(f"Created: {user}")
-    print(f"Emails sent: {mock_email.sent}")
-    print("No real database or email server needed! ✅")
+    # Tests: mock implementations injected — no real DB or email needed
+    mock_email = MockEmailSender()
+    test = UserService(db=MockDatabase(), email=mock_email, logger=NullLogger())
+    print("\n=== Test (no real infrastructure) ===")
+    print(test.create_user("Bob", "bob@test.com"))
+    print(f"Emails captured: {mock_email.sent}")

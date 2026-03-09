@@ -2,6 +2,11 @@
 LSP Example 1: The Classic Rectangle → Square Violation
 
 Demonstrates why mathematically correct "is-a" ≠ OOP correct "is-a".
+
+Real-world use: This violation pattern appears in payment systems where
+GiftCard tries to extend a RefundablePayment base but raises NotImplementedError
+in refund(). The fix is the same: separate classes with a shared interface,
+each fulfilling its own contract without surprising the caller.
 """
 
 
