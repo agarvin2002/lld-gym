@@ -1,16 +1,20 @@
 """
-Singleton Pattern Exercise - Starter File
-==========================================
+WHAT YOU'RE BUILDING
+====================
+A thread-safe ApplicationConfig singleton.
 
-Your task: Implement a thread-safe ApplicationConfig singleton.
+The config is loaded once (on the first call) and shared across the entire app.
+Every subsequent call to ApplicationConfig() returns the same object —
+even from different threads.
 
-Read problem.md for the full requirements before starting.
+Your class must support:
+- ApplicationConfig({"key": "value"})  → first call, loads config
+- ApplicationConfig()                  → subsequent calls, returns same instance
+- config.get("key")                    → read a value
+- config.set("key", "new_value")       → update a value
+- config.all()                         → get a copy of the entire config dict
 
-Instructions:
-    1. Fill in the __init__, get, set, and all methods
-    2. Implement the singleton mechanism (hint: __new__ or a class-level _instance)
-    3. Add thread safety with threading.Lock
-    4. Run tests.py to verify: python tests.py
+Read exercises/problem.md for full requirements.
 """
 
 import threading
@@ -18,82 +22,60 @@ from typing import Any, Optional
 
 
 class ApplicationConfig:
-    """
-    A thread-safe singleton that holds application-wide configuration.
+    """Thread-safe singleton that holds application-wide configuration."""
 
-    Usage:
-        config = ApplicationConfig({"key": "value"})  # loads config
-        config = ApplicationConfig()                   # returns same instance
-        config.get("key")                              # retrieve value
-        config.set("key", "new_value")                 # update value
-    """
-
-    # TODO: Add class-level variable(s) for the singleton instance
-    # Hint: _instance = None
-
-    # TODO: Add a threading.Lock for thread safety
-    # Hint: _lock = threading.Lock()
+    # TODO: Add _instance = None  (stores the one shared object)
+    # TODO: Add _lock = threading.Lock()  (protects creation in multi-threaded code)
 
     def __new__(cls, config: Optional[dict[str, Any]] = None) -> "ApplicationConfig":
         """
-        Override __new__ to implement the singleton mechanism.
+        Return the existing instance, or create one if this is the first call.
 
-        Steps:
-        1. Check if _instance is None (first check — no lock)
-        2. If None, acquire the lock
-        3. Check again if _instance is None (second check — inside lock)
-        4. If still None, create the instance with super().__new__(cls)
-        5. Return _instance
-
-        Hint: Use double-checked locking pattern.
+        Use double-checked locking:
+          1. if cls._instance is None  → first check, no lock (fast path)
+          2. with cls._lock            → acquire lock
+          3. if cls._instance is None  → second check inside lock (safe creation)
+          4. cls._instance = super().__new__(cls)
+          5. return cls._instance
         """
         # TODO: Implement double-checked locking here
+        # HINT: copy the 5-step pattern from the docstring above
         pass
 
     def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         """
-        Initialize the config on first call only.
+        Set up the config dict on the very first call only.
 
-        The challenge: __init__ runs every time ApplicationConfig() is called,
-        even though __new__ returns the same object.
-
-        Use a flag (e.g., _initialized) to guard against re-initialization.
-
-        Steps:
-        1. Check if already initialized — if so, return immediately
-        2. Set self._config = config or {}
-        3. Set self._data_lock = threading.Lock() (for protecting reads/writes)
-        4. Set self._initialized = True
+        __init__ runs every time ApplicationConfig() is called, even when
+        __new__ returned the cached instance. Use a flag to skip re-init.
         """
-        # TODO: Implement guarded initialization
+        # TODO: Return immediately if already initialised
+        # HINT: if hasattr(self, '_initialized'): return
+
+        # TODO: Set self._config = config if config is not None, else {}
+        # TODO: Set self._data_lock = threading.Lock()  (protects reads/writes)
+        # TODO: Set self._initialized = True
         pass
 
     def get(self, key: str, default: Any = None) -> Any:
-        """
-        Return the config value for key, or default if not found.
-
-        Must be thread-safe (use self._data_lock).
-        """
-        # TODO: Implement thread-safe get
+        """Return the value for key, or default if the key does not exist."""
+        # TODO: Acquire self._data_lock, then return self._config.get(key, default)
+        # HINT: use  with self._data_lock:
         pass
 
     def set(self, key: str, value: Any) -> None:
-        """
-        Update a config value.
-
-        Must be thread-safe (use self._data_lock).
-        """
-        # TODO: Implement thread-safe set
+        """Add or update a key in the config."""
+        # TODO: Acquire self._data_lock, then set self._config[key] = value
         pass
 
     def all(self) -> dict[str, Any]:
         """
-        Return a copy of the entire config dictionary.
+        Return a snapshot of the entire config.
 
-        Return a COPY, not the live dict (prevent external mutation).
-        Must be thread-safe.
+        Must return a COPY so callers cannot mutate the live config dict.
         """
-        # TODO: Implement thread-safe all()
+        # TODO: Acquire self._data_lock, then return a copy of self._config
+        # HINT: dict(self._config)  or  self._config.copy()
         pass
 
     def __repr__(self) -> str:
@@ -101,28 +83,14 @@ class ApplicationConfig:
 
 
 # =============================================================================
-# Manual smoke test — run this file directly to see basic behavior
+# HOW TO RUN TESTS
 # =============================================================================
-
-if __name__ == "__main__":
-    # Reset for a clean test (you'd never do this in production)
-    ApplicationConfig._instance = None  # type: ignore
-
-    print("Creating config1 with initial data...")
-    config1 = ApplicationConfig({
-        "database_url": "postgresql://localhost/mydb",
-        "debug": True,
-        "max_connections": 10,
-    })
-
-    print("Creating config2 (should return same instance)...")
-    config2 = ApplicationConfig({"database_url": "IGNORED"})
-
-    print(f"\nconfig1 is config2: {config1 is config2}")
-    print(f"config1.get('database_url'): {config1.get('database_url')}")
-    print(f"config2.get('database_url'): {config2.get('database_url')}")
-    print(f"config1.get('missing', 'fallback'): {config1.get('missing', 'fallback')}")
-
-    config1.set("debug", False)
-    print(f"\nAfter config1.set('debug', False):")
-    print(f"config2.get('debug'): {config2.get('debug')}")  # Should be False
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/creational/singleton/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

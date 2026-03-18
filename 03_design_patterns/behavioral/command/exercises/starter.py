@@ -1,4 +1,18 @@
-"""Command Pattern Exercise — Drawing Canvas Reference Solution."""
+"""
+WHAT YOU'RE BUILDING
+====================
+A drawing canvas that supports undo and redo.
+
+The canvas holds a list of shapes. Three command classes wrap each action:
+- AddShapeCommand  — adds a shape to the canvas
+- RemoveShapeCommand — removes a shape from the canvas
+- MoveShapeCommand — moves a shape by (dx, dy)
+
+The DrawingApp (invoker) keeps an undo stack and a redo stack.
+Calling execute() runs a command and pushes it onto the undo stack.
+Calling undo() pops the last command and reverses it.
+Calling redo() re-executes the last undone command.
+"""
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -24,18 +38,21 @@ class Canvas:
         self._shapes: list[Shape] = []
 
     def add_shape(self, shape: Shape) -> None:
-        self._shapes.append(shape)
+        # TODO: Append shape to self._shapes
+        pass
 
     def remove_shape(self, shape: Shape) -> None:
-        self._shapes.remove(shape)
+        # TODO: Remove shape from self._shapes
+        pass
 
     def move_shape(self, shape: Shape, dx: float, dy: float) -> None:
-        shape.x += dx
-        shape.y += dy
+        # TODO: Add dx to shape.x and dy to shape.y
+        pass
 
     @property
     def shapes(self) -> list[Shape]:
-        return list(self._shapes)
+        # TODO: Return a copy of self._shapes (so callers can't mutate it)
+        pass
 
 
 class AddShapeCommand(Command):
@@ -44,10 +61,12 @@ class AddShapeCommand(Command):
         self._shape = shape
 
     def execute(self) -> None:
-        self._canvas.add_shape(self._shape)
+        # TODO: Call canvas.add_shape with the stored shape
+        pass
 
     def undo(self) -> None:
-        self._canvas.remove_shape(self._shape)
+        # TODO: Call canvas.remove_shape to reverse the add
+        pass
 
 
 class RemoveShapeCommand(Command):
@@ -56,10 +75,12 @@ class RemoveShapeCommand(Command):
         self._shape = shape
 
     def execute(self) -> None:
-        self._canvas.remove_shape(self._shape)
+        # TODO: Call canvas.remove_shape with the stored shape
+        pass
 
     def undo(self) -> None:
-        self._canvas.add_shape(self._shape)
+        # TODO: Call canvas.add_shape to restore the removed shape
+        pass
 
 
 class MoveShapeCommand(Command):
@@ -70,10 +91,13 @@ class MoveShapeCommand(Command):
         self._dy = dy
 
     def execute(self) -> None:
-        self._canvas.move_shape(self._shape, self._dx, self._dy)
+        # TODO: Call canvas.move_shape(shape, dx, dy)
+        pass
 
     def undo(self) -> None:
-        self._canvas.move_shape(self._shape, -self._dx, -self._dy)
+        # HINT: To reverse a move of (dx, dy), move by (-dx, -dy)
+        # TODO: Call canvas.move_shape with negated dx and dy
+        pass
 
 
 class DrawingApp:
@@ -83,24 +107,37 @@ class DrawingApp:
         self._redo_stack: list[Command] = []
 
     def execute(self, command: Command) -> None:
-        command.execute()
-        self._undo_stack.append(command)
-        self._redo_stack.clear()
+        # HINT: Run the command, add it to the undo stack, and clear the redo stack.
+        #       Clearing the redo stack is important: a new action invalidates future redos.
+        # TODO: call command.execute(), append to _undo_stack, clear _redo_stack
+        pass
 
     def undo(self) -> None:
-        if not self._undo_stack:
-            return
-        command = self._undo_stack.pop()
-        command.undo()
-        self._redo_stack.append(command)
+        # HINT: Pop from _undo_stack, call undo() on it, push onto _redo_stack.
+        #       Do nothing if the stack is empty.
+        # TODO: implement undo
+        pass
 
     def redo(self) -> None:
-        if not self._redo_stack:
-            return
-        command = self._redo_stack.pop()
-        command.execute()
-        self._undo_stack.append(command)
+        # HINT: Pop from _redo_stack, call execute() on it, push onto _undo_stack.
+        #       Do nothing if the stack is empty.
+        # TODO: implement redo
+        pass
 
     @property
     def canvas(self) -> Canvas:
         return self._canvas
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/behavioral/command/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

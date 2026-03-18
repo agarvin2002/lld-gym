@@ -1,13 +1,16 @@
 """Command Pattern — Example 1: Text Editor with Undo/Redo.
 
-The Command pattern wraps each action as an object, enabling undo/redo,
-queuing, and logging without the caller knowing the details of each action.
+Wraps each edit action as a command object. The editor holds undo/redo stacks
+and calls execute() / undo() without knowing the details of each action.
+
+Real-world use: Google Docs, VS Code, and Figma all use this exact structure
+for Ctrl+Z / Ctrl+Shift+Z. Every keystroke or draw action is a queued command.
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
 
-# ── Command Interface ─────────────────────────────────────────────────────────
+# ── Command Interface ──────────────────────────────────────────────────────────
 
 class Command(ABC):
     @abstractmethod
@@ -34,11 +37,8 @@ class Document:
     def text(self) -> str:
         return self._text
 
-    def __repr__(self) -> str:
-        return f"Document({self._text!r})"
 
-
-# ── Concrete Commands ─────────────────────────────────────────────────────────
+# ── Concrete Commands ──────────────────────────────────────────────────────────
 
 class InsertCommand(Command):
     def __init__(self, doc: Document, position: int, text: str) -> None:
@@ -62,7 +62,6 @@ class DeleteCommand(Command):
         self._deleted: str = ""  # captured on execute() for undo
 
     def execute(self) -> None:
-        # Capture the deleted text before removing it
         self._deleted = self._doc.text[self._position:self._position + self._length]
         self._doc.delete(self._position, self._length)
 
@@ -71,7 +70,7 @@ class DeleteCommand(Command):
         self._doc.insert(self._position, self._deleted)
 
 
-# ── Invoker ───────────────────────────────────────────────────────────────────
+# ── Invoker ────────────────────────────────────────────────────────────────────
 
 class TextEditor:
     """Invoker: holds the undo/redo stacks and dispatches commands."""
@@ -106,7 +105,7 @@ class TextEditor:
         return self._doc.text
 
 
-# ── Demo ──────────────────────────────────────────────────────────────────────
+# ── Demo ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     doc = Document()

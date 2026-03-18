@@ -3,6 +3,9 @@ State Pattern — Example 1: Traffic Light (Enum approach)
 =========================================================
 State stored as an Enum. Transitions defined in a dict.
 Clean for simple state machines with few states.
+
+Real-world use: Zomato order status (PLACED → CONFIRMED → PREPARING →
+PICKED_UP → DELIVERED) uses the same Enum + transition-dict pattern.
 """
 from enum import Enum, auto
 

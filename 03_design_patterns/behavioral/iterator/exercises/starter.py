@@ -1,18 +1,19 @@
 """
-Solution: Playlist Iterator
-============================
-Demonstrates how Python's built-in iterator protocol makes most of the work
-trivial — `list` already knows how to iterate, reverse, and copy itself.
+WHAT YOU'RE BUILDING
+====================
+A Playlist class that holds Song objects and supports three ways to iterate:
+
+1. Forward iteration (default for-loop) — songs in the order they were added
+2. Reversed iteration  — songs from last to first
+3. Shuffled iteration  — songs in a random order each time
+
+The Playlist must be re-usable: looping over it twice should work fine.
 """
 
 from __future__ import annotations
 from dataclasses import dataclass
 import random
 
-
-# ---------------------------------------------------------------------------
-# Song — same definition as starter.py
-# ---------------------------------------------------------------------------
 
 @dataclass
 class Song:
@@ -21,56 +22,49 @@ class Song:
     duration_seconds: int
 
 
-# ---------------------------------------------------------------------------
-# Playlist
-# ---------------------------------------------------------------------------
-
 class Playlist:
-    """
-    A sequence of Songs with forward, reverse, and shuffled iteration.
-
-    Design decisions:
-    - `Playlist` is an *iterable*, not an *iterator*.  This means `__iter__`
-      returns a fresh iterator object each call, allowing multiple independent
-      loops over the same playlist.
-    - We delegate to Python's built-in list iterator (`iter()`), list reversal
-      (`reversed()`), and a shuffled copy — no custom iterator class is needed.
-    - `shuffled()` works on a copy to avoid mutating `_songs`.
-    """
-
     def __init__(self) -> None:
-        self._songs: list[Song] = []
+        # TODO: Create self._songs as an empty list to store Song objects
+        pass
 
     def add_song(self, song: Song) -> None:
-        """Append `song` to the end of the playlist."""
-        self._songs.append(song)
+        # TODO: Append the song to self._songs
+        pass
 
     def __iter__(self):
-        """Return a fresh iterator over songs in insertion order."""
-        return iter(self._songs)
+        # HINT: Use iter(self._songs) — Python's built-in iter() returns a
+        #       fresh list iterator each call, so the playlist stays reusable.
+        # TODO: Return iter(self._songs)
+        pass
 
     def __len__(self) -> int:
-        """Return the number of songs."""
-        return len(self._songs)
+        # TODO: Return the number of songs
+        pass
 
     def reversed(self):
-        """
-        Return an iterable that yields songs in reverse insertion order.
-
-        `reversed()` on a list returns a `list_reverseiterator` — a single-pass
-        iterator.  Calling `playlist.reversed()` multiple times each produces a
-        fresh iterator, so the playlist remains reusable.
-        """
-        return reversed(self._songs)
+        # HINT: Use reversed(self._songs) — returns a reverse iterator without
+        #       modifying self._songs at all.
+        # TODO: Return reversed(self._songs)
+        pass
 
     def shuffled(self):
-        """
-        Return an iterable that yields all songs in a random order.
+        # HINT: Copy self._songs first (list(self._songs)), then call
+        #       random.shuffle() on the copy, then return iter(copy).
+        #       Never shuffle self._songs directly — that would change the
+        #       original order permanently.
+        # TODO: Shuffle a copy and return an iterator over the copy
+        pass
 
-        We copy `_songs` first so the original order is never disturbed.
-        `random.shuffle()` shuffles in-place, then we return an iterator over
-        the shuffled copy.
-        """
-        songs_copy = list(self._songs)
-        random.shuffle(songs_copy)
-        return iter(songs_copy)
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/behavioral/iterator/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

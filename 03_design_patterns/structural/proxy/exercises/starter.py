@@ -1,15 +1,23 @@
-"""Proxy Pattern Exercise — Reference Solution.
+"""
+WHAT YOU'RE BUILDING
+====================
+Three proxy types that all wrap a Database interface:
 
-Three proxy types around a Database interface:
-  CachingDatabaseProxy   — avoids redundant queries
-  LoggingDatabaseProxy   — records every SQL string
-  ProtectedDatabaseProxy — enforces user-based access control
+  CachingDatabaseProxy   — return stored results for repeated SQL queries
+                           so the real database is only called once per query.
+  LoggingDatabaseProxy   — record every SQL string before forwarding it
+                           so you have a full audit trail.
+  ProtectedDatabaseProxy — allow only users in an approved list to run queries;
+                           raise PermissionError for everyone else.
+
+The abstract base class (Database) and the real implementation (RealDatabase)
+are already complete. You only need to implement the three proxy classes.
 """
 from abc import ABC, abstractmethod
 
 
 # ---------------------------------------------------------------------------
-# Subject interface
+# Subject interface — DO NOT MODIFY
 # ---------------------------------------------------------------------------
 
 class Database(ABC):
@@ -22,7 +30,7 @@ class Database(ABC):
 
 
 # ---------------------------------------------------------------------------
-# Real Subject
+# Real Subject — DO NOT MODIFY
 # ---------------------------------------------------------------------------
 
 class RealDatabase(Database):
@@ -33,7 +41,6 @@ class RealDatabase(Database):
     """
 
     def __init__(self, connection_string: str) -> None:
-        """Initialise with a connection string and an empty query log."""
         self._connection_string = connection_string
         self._query_log: list[str] = []
 
@@ -44,94 +51,92 @@ class RealDatabase(Database):
 
 
 # ---------------------------------------------------------------------------
-# Proxy 1: Caching
+# Proxy 1: Caching — implement this class
 # ---------------------------------------------------------------------------
 
 class CachingDatabaseProxy(Database):
-    """Caches query results so identical SQL strings skip the real database.
-
-    The first call for a given SQL string is forwarded to the wrapped
-    ``RealDatabase``.  Every subsequent call with the same string returns
-    the stored result and increments ``cache_hits``.
-    """
+    """Caches query results so identical SQL strings skip the real database."""
 
     def __init__(self, real: RealDatabase) -> None:
-        """Wrap *real* and initialise an empty cache."""
-        self._real = real
-        self._cache: dict[str, list[dict]] = {}
-        self._cache_hits: int = 0
+        # TODO: Store the real database as self._real
+        # TODO: Create an empty cache dict: self._cache = {}
+        # TODO: Set a hit counter: self._cache_hits = 0
+        pass
 
     def query(self, sql: str) -> list[dict]:
         """Return cached result if available; otherwise forward to real DB."""
-        if sql in self._cache:
-            self._cache_hits += 1
-            return self._cache[sql]
-        result = self._real.query(sql)
-        self._cache[sql] = result
-        return result
+        # TODO: If sql is in self._cache, increment self._cache_hits and return the cached value.
+        # TODO: Otherwise, call self._real.query(sql), store the result in the cache, then return it.
+        # HINT: self._cache is a dict[str, list[dict]] — key is the SQL string, value is the result.
+        pass
 
     @property
     def cache_hits(self) -> int:
         """Number of times a cached result was returned instead of querying the DB."""
-        return self._cache_hits
+        # TODO: Return self._cache_hits
+        pass
 
     @property
     def cache_size(self) -> int:
         """Number of distinct SQL strings currently in the cache."""
-        return len(self._cache)
+        # TODO: Return len(self._cache)
+        pass
 
     def clear_cache(self) -> None:
         """Empty the cache and reset the hit counter to zero."""
-        self._cache.clear()
-        self._cache_hits = 0
+        # TODO: Clear self._cache and reset self._cache_hits to 0
+        pass
 
 
 # ---------------------------------------------------------------------------
-# Proxy 2: Logging
+# Proxy 2: Logging — implement this class
 # ---------------------------------------------------------------------------
 
 class LoggingDatabaseProxy(Database):
-    """Records every SQL query before delegating to the wrapped database.
-
-    The wrapped database may be a ``RealDatabase`` or another proxy,
-    enabling composable proxy chains.
-    """
+    """Records every SQL query before delegating to the wrapped database."""
 
     def __init__(self, db: Database) -> None:
-        """Wrap *db* (any ``Database``) and initialise an empty query log."""
-        self._db = db
-        self.query_log: list[str] = []
+        # TODO: Store the wrapped database as self._db
+        # TODO: Create an empty list: self.query_log = []
+        # HINT: Note the attribute is self.query_log (public), not self._query_log.
+        pass
 
     def query(self, sql: str) -> list[dict]:
-        """Append *sql* to ``query_log``, delegate, and return the result."""
-        self.query_log.append(sql)
-        return self._db.query(sql)
+        """Append *sql* to query_log, delegate, and return the result."""
+        # TODO: Add sql to self.query_log.
+        # TODO: Forward the call to self._db.query(sql) and return the result.
+        pass
 
 
 # ---------------------------------------------------------------------------
-# Proxy 3: Protection
+# Proxy 3: Protection — implement this class
 # ---------------------------------------------------------------------------
 
 class ProtectedDatabaseProxy(Database):
-    """Allows only users in *allowed_users* to execute queries.
-
-    Any call from an unrecognised user raises ``PermissionError`` before
-    the wrapped database is ever contacted.
-    """
+    """Allows only users in *allowed_users* to execute queries."""
 
     def __init__(self, db: Database, allowed_users: list[str]) -> None:
-        """Wrap *db* and store the set of permitted user names."""
-        self._db = db
-        self._allowed: set[str] = set(allowed_users)
+        # TODO: Store the wrapped database as self._db
+        # TODO: Store allowed_users as a set: self._allowed = set(allowed_users)
+        pass
 
     def query(self, sql: str, user: str = "") -> list[dict]:  # type: ignore[override]
-        """Raise ``PermissionError`` if *user* is not allowed; else delegate.
+        """Raise PermissionError if *user* is not allowed; else delegate."""
+        # TODO: If user is not in self._allowed, raise PermissionError.
+        # TODO: Otherwise, forward to self._db.query(sql) and return the result.
+        # HINT: Do NOT pass user downstream — call self._db.query(sql) (no user argument).
+        pass
 
-        The wrapped database is called with ``query(sql)`` — the ``user``
-        argument is consumed here and not forwarded downstream.
-        """
-        if user not in self._allowed:
-            raise PermissionError(
-                f"User {user!r} is not authorised to query this database."
-            )
-        return self._db.query(sql)
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/structural/proxy/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

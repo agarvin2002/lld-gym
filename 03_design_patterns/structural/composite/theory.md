@@ -1,109 +1,59 @@
 # Composite Pattern
 
-## What Is It?
+## What is it?
+The Composite pattern lets you treat a single object and a group of objects the same way.
+You define one shared interface. Both the individual item and the container implement it.
+The container just delegates to its children — no special-casing needed by the caller.
 
-The **Composite** pattern lets you treat individual objects (leaves) and
-compositions of objects (composites) **uniformly** through a shared interface.
-Client code calls the same methods regardless of whether it is talking to a
-single item or an entire tree of items.
+## Analogy
+Think of a Zomato order. A single dish has a price. A combo meal also has a price — it adds up the prices of its dishes.
+You call `.price()` on either one. You do not need to know whether it is a single item or a combo.
 
-## Real-World Analogy
-
-Think of a company **org chart**.
-
-- An **Employee** (leaf) has a salary. Ask them `get_salary()` → returns their own pay.
-- A **Department** (composite) contains employees *and* sub-departments.
-  Ask it `get_salary()` → it asks every child and sums the results.
-
-The caller does not need to know whether it is talking to a person or an entire
-division. Both answer the same question.
-
-Other examples: file systems (File vs Directory), GUI widgets (Button vs Panel),
-restaurant menus (MenuItem vs Menu category).
-
-## Why It Matters
-
-Recursive tree structures appear everywhere in software. Without Composite you
-end up writing `if isinstance(node, Leaf): … else: …` branches everywhere.
-With Composite, recursion is *encoded in the tree itself* — the composite
-delegates to its children, and each child does the same.
-
-## Python Specifics
-
+## Minimal code
 ```python
 from abc import ABC, abstractmethod
 
-class Component(ABC):
-    @property
+class OrderItem(ABC):
     @abstractmethod
-    def name(self) -> str: ...
+    def price(self) -> float: ...
 
-    @abstractmethod
-    def operation(self) -> int: ...   # leaf returns scalar, composite sums children
+class Dish(OrderItem):
+    def __init__(self, name: str, cost: float) -> None:
+        self._cost = cost
 
-class Leaf(Component):
-    def __init__(self, name: str, value: int) -> None:
-        self._name = name
-        self._value = value
+    def price(self) -> float:
+        return self._cost          # leaf: return own value
 
-    @property
-    def name(self) -> str:
-        return self._name
+class Combo(OrderItem):
+    def __init__(self) -> None:
+        self._items: list[OrderItem] = []
 
-    def operation(self) -> int:
-        return self._value            # base case
+    def add(self, item: OrderItem) -> None:
+        self._items.append(item)
 
-class Composite(Component):
-    def __init__(self, name: str) -> None:
-        self._name = name
-        self._children: list[Component] = []
+    def price(self) -> float:
+        return sum(i.price() for i in self._items)  # composite: delegate to children
+        # Each child may itself be a Combo — the recursion goes as deep as needed.
 
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def add(self, child: Component) -> None:
-        self._children.append(child)
-
-    def operation(self) -> int:
-        return sum(c.operation() for c in self._children)   # recursive case
+biryani = Dish("Biryani", 180)
+raita   = Dish("Raita",    40)
+meal    = Combo()
+meal.add(biryani)
+meal.add(raita)
+print(meal.price())   # 220 — no isinstance() anywhere
 ```
 
-## When to Use
+## Real-world uses
+- File system: a `File` returns its own size; a `Directory` sums the sizes of everything inside it
+- Org chart: an `Employee` returns their own salary; a `Department` sums salaries of all members
+- Flipkart cart: individual products and bundled packs both expose a `total_price()` method
 
-- You need to represent **part-whole hierarchies** (trees, nested structures).
-- Client code should be able to ignore the difference between leaf and composite.
-- You want to **add new node types** without modifying existing client code
-  (Open/Closed Principle).
+## One mistake
+Putting `add_child()` on the base interface (ABC) instead of only on the composite class.
+Leaf nodes cannot have children, so calling `add_child()` on a leaf should be impossible or raise immediately.
+Keep `add_child()` on the composite only — callers that have a composite reference already know what they have.
 
-## When to Avoid
-
-- Leaf and composite behaviours diverge so much that a shared interface becomes
-  misleading or forces empty/unsupported methods on leaves.
-- The hierarchy is guaranteed to be only one level deep — a plain list suffices.
-- You need strict type safety at the API level: exposing `add_child` only on
-  Composite (the "safety" variant) means clients must downcast, which can be
-  awkward.
-
-## Transparency vs Safety
-
-Two flavours exist:
-
-| Variant | `add_child` on | Trade-off |
-|---------|---------------|-----------|
-| **Transparent** | `Component` ABC | Uniform interface; leaf must raise or no-op |
-| **Safety** | `Composite` only | Type-safe; client must know node type |
-
-Python codebases usually prefer **safety** — keep `add_child` on `Composite`,
-and rely on duck-typing when the caller already has a `Composite` reference.
-
-## Common Mistakes
-
-- Calling `add_child()` on a `Leaf` — either guard with `NotImplementedError`
-  or keep `add_child` off the base ABC entirely.
-- Forgetting the **base case**: a leaf's method must return a concrete value,
-  not delegate further.
-- Storing children as a `tuple` (immutable) when the tree needs to grow at
-  runtime — use a `list`.
-- Making `display()` print directly instead of returning a `str`; returning a
-  string makes testing straightforward.
+## What to do next
+- Read `examples/example1_filesystem.py` to see a full file-system tree.
+- Read `examples/example2_menu.py` to see a restaurant menu built as a composite tree.
+- Then open `exercises/starter.py` and build your own org chart.

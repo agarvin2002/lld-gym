@@ -1,6 +1,5 @@
 """
 Composite Pattern — Example 1: File System
-==========================================
 
 A file system is the canonical Composite example.
 
@@ -10,6 +9,9 @@ A file system is the canonical Composite example.
 
 Key insight: directory.size() works the same whether the directory contains
 files, sub-directories, or a mixture — no isinstance() checks required.
+
+Real-world use: Cloud storage dashboards (Google Drive, Dropbox) calculate
+folder sizes by recursively summing all nested files using this same pattern.
 """
 
 from __future__ import annotations
@@ -54,7 +56,7 @@ class File(FileSystemItem):
         return self._name
 
     def size(self) -> int:
-        return self._size_bytes
+        return self._size_bytes   # base case: return own value
 
     def display(self, indent: int = 0) -> str:
         prefix = "  " * indent
@@ -77,7 +79,7 @@ class Directory(FileSystemItem):
         return self._name
 
     def add(self, item: FileSystemItem) -> "Directory":
-        """Add a child item (fluent — returns self for chaining)."""
+        """Add a child item. Returns self for fluent chaining."""
         self._children.append(item)
         return self
 
@@ -85,7 +87,7 @@ class Directory(FileSystemItem):
         self._children.remove(item)
 
     def size(self) -> int:
-        """Recursively sum the sizes of all children."""
+        """Recursive sum — each child handles its own subtree."""
         return sum(child.size() for child in self._children)
 
     def display(self, indent: int = 0) -> str:
@@ -113,20 +115,10 @@ def build_sample_tree() -> Directory:
     │   └── profile.png        (200 000 B)
     └── notes.txt              (  2 000 B)
     """
-    resume        = File("resume.pdf",         120_000)
-    cover_letter  = File("cover_letter.docx",   45_000)
-    docs          = Directory("docs").add(resume).add(cover_letter)
-
-    beach         = File("beach.jpg",          800_000)
-    sunset        = File("sunset.jpg",         650_000)
-    vacation      = Directory("vacation").add(beach).add(sunset)
-
-    profile       = File("profile.png",        200_000)
-    pictures      = Directory("pictures").add(vacation).add(profile)
-
-    notes         = File("notes.txt",            2_000)
-
-    home          = Directory("home").add(docs).add(pictures).add(notes)
+    docs     = Directory("docs").add(File("resume.pdf", 120_000)).add(File("cover_letter.docx", 45_000))
+    vacation = Directory("vacation").add(File("beach.jpg", 800_000)).add(File("sunset.jpg", 650_000))
+    pictures = Directory("pictures").add(vacation).add(File("profile.png", 200_000))
+    home     = Directory("home").add(docs).add(pictures).add(File("notes.txt", 2_000))
     return home
 
 
@@ -138,19 +130,16 @@ if __name__ == "__main__":
 
     print()
 
-    # Demonstrate uniform treatment
+    # Same size() call works on directory or file — no isinstance() needed
     items: list[FileSystemItem] = [
         home,
-        home._children[0],  # docs/
+        home._children[0],           # docs/
         home._children[0]._children[0],  # resume.pdf
     ]
     print("=== Sizes (uniform interface) ===")
     for item in items:
         print(f"  {item.name:25s}  {item.size():>10,} B")
 
-    print()
-
-    # Verify arithmetic
     expected = 120_000 + 45_000 + 800_000 + 650_000 + 200_000 + 2_000
     assert home.size() == expected, f"Expected {expected}, got {home.size()}"
-    print(f"home.size() == {home.size():,} B  (verified correct)")
+    print(f"\nhome.size() == {home.size():,} B  ✓")

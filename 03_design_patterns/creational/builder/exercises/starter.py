@@ -1,13 +1,28 @@
 """
-Builder Pattern Exercise — Resume / CV Builder (Solution)
-"""
-from __future__ import annotations
+WHAT YOU'RE BUILDING
+=====================
+A Resume builder that constructs a Resume object step by step.
 
+A resume has:
+  - contact info (name, email; optionally phone and LinkedIn)
+  - a summary paragraph
+  - a list of work experiences (company, title, years)
+  - a list of skills
+  - an education line
+
+You'll implement ResumeBuilder — a fluent builder where every setter returns
+self so calls can be chained. build() is the only place where the Resume is
+created, and it must raise ValueError if contact info was never set.
+
+Data classes (ContactInfo, WorkExperience, Resume) are provided — do not modify them.
+"""
+
+from __future__ import annotations
 from dataclasses import dataclass, field
 
 
 # ---------------------------------------------------------------------------
-# Data classes
+# Data classes — do not modify
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -47,6 +62,9 @@ class ResumeBuilder:
     """
 
     def __init__(self) -> None:
+        # TODO: Initialise all private fields.
+        # _contact starts as None — build() checks for it.
+        # _experiences and _skills start as empty lists.
         self._contact: ContactInfo | None = None
         self._summary: str = ""
         self._experiences: list[WorkExperience] = []
@@ -54,32 +72,45 @@ class ResumeBuilder:
         self._education: str = ""
 
     def contact(self, name: str, email: str, phone: str = "", linkedin: str = "") -> ResumeBuilder:
-        self._contact = ContactInfo(name=name, email=email, phone=phone, linkedin=linkedin)
-        return self
+        # TODO: Create a ContactInfo from the arguments and store it in self._contact.
+        # Then return self so the caller can keep chaining.
+        # HINT: ContactInfo(name=name, email=email, phone=phone, linkedin=linkedin)
+        pass
 
     def summary(self, text: str) -> ResumeBuilder:
-        self._summary = text
-        return self
+        # TODO: Store the summary text and return self.
+        pass
 
     def add_experience(self, company: str, title: str, years: float) -> ResumeBuilder:
-        self._experiences.append(WorkExperience(company=company, title=title, years=years))
-        return self
+        # TODO: Append a new WorkExperience to self._experiences and return self.
+        # HINT: WorkExperience(company=company, title=title, years=years)
+        pass
 
     def add_skill(self, skill: str) -> ResumeBuilder:
-        self._skills.append(skill)
-        return self
+        # TODO: Append the skill string to self._skills and return self.
+        pass
 
     def education(self, text: str) -> ResumeBuilder:
-        self._education = text
-        return self
+        # TODO: Store the education text and return self.
+        pass
 
     def build(self) -> Resume:
-        if self._contact is None:
-            raise ValueError("Contact information (name and email) is required.")
-        return Resume(
-            contact=self._contact,
-            summary=self._summary,
-            experiences=list(self._experiences),  # snapshot — isolates built object
-            skills=list(self._skills),            # snapshot — isolates built object
-            education=self._education,
-        )
+        # TODO: If self._contact is None, raise ValueError("Contact information (name and email) is required.")
+        # HINT: After validation, return Resume(...) with all fields.
+        # Use list(self._experiences) and list(self._skills) — snapshots so the
+        # builder's lists can't affect the built Resume if the builder is reused.
+        pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/creational/builder/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

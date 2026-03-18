@@ -5,10 +5,9 @@ Demonstrates how a HomeTheaterFacade simplifies the coordination of six
 independent subsystem classes: Projector, Screen, SurroundSound, BluRayPlayer,
 Lights, and StreamingBox.
 
-Without the Facade, a client would need to know the correct startup sequence
-(dim lights, lower screen, power on projector, set input, power on sound, set
-volume, insert disc, press play) and reverse it on shutdown. The Facade names
-these workflows and encapsulates the sequence.
+Real-world use: Smart home apps (Google Home, Apple HomeKit) expose "scenes"
+like "Movie Night" that coordinate lights, TV, and speakers with one tap —
+exactly what this Facade does.
 """
 
 from __future__ import annotations
@@ -85,9 +84,6 @@ class BluRayPlayer:
         self._playing = title
         print(f"[BluRay] Playing '{title}'.")
 
-    def pause(self) -> None:
-        print(f"[BluRay] Paused '{self._playing}'.")
-
     def stop(self) -> None:
         self._playing = None
         print("[BluRay] Stopped.")
@@ -96,20 +92,16 @@ class BluRayPlayer:
 class Lights:
     def __init__(self, room: str = "Living Room") -> None:
         self._room = room
-        self._on = True
-        self._dimmer = 100  # percentage
+        self._dimmer = 100
 
     def on(self) -> None:
-        self._on = True
         self._dimmer = 100
         print(f"[Lights:{self._room}] Lights ON at full brightness.")
 
     def off(self) -> None:
-        self._on = False
         print(f"[Lights:{self._room}] Lights OFF.")
 
     def set_dimmer(self, level: int) -> None:
-        self._on = True
         self._dimmer = level
         print(f"[Lights:{self._room}] Dimmer set to {level}%.")
 
@@ -133,7 +125,7 @@ class StreamingBox:
 
 class HomeTheaterFacade:
     """
-    Provides three high-level operations:
+    Three high-level operations over six subsystems:
       - watch_movie   : physical disc via Blu-ray
       - end_movie     : shut everything down
       - stream_netflix: streaming via StreamingBox
@@ -197,20 +189,14 @@ class HomeTheaterFacade:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # Build subsystems
-    projector = Projector()
-    screen = Screen()
-    sound = SurroundSound()
-    bluray = BluRayPlayer()
-    lights = Lights()
-    streaming_box = StreamingBox()
-
-    # Build facade
-    theater = HomeTheaterFacade(projector, screen, sound, bluray, lights, streaming_box)
+    theater = HomeTheaterFacade(
+        Projector(), Screen(), SurroundSound(),
+        BluRayPlayer(), Lights(), StreamingBox(),
+    )
 
     # Scenario 1: Watch a Blu-ray movie
     theater.watch_movie("Interstellar")
     theater.end_movie()
 
-    # Scenario 2: Stream something on Netflix
+    # Scenario 2: Stream something
     theater.stream_netflix("The Bear")

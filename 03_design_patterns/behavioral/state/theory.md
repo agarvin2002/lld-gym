@@ -1,106 +1,55 @@
 # State Pattern
 
 ## What is it?
-Allow an object to alter its behaviour when its internal state changes. The object will appear to change its class.
+An object changes its behaviour when its internal state changes.
+Instead of a long chain of `if/elif` checks, each state is its own class (or Enum value).
+Adding a new state means adding a new class — existing code stays untouched.
 
-## Real-world analogy
-A traffic light. The same physical box behaves differently depending on state: RED stops traffic, GREEN allows it, YELLOW warns. The same `change()` trigger transitions between states differently depending on current state.
+## Analogy
+A vending machine. The same "insert coin" button does different things depending
+on whether the machine is IDLE, already HAS_MONEY, or is OUT_OF_STOCK.
+The button doesn't change — the state does.
 
-## Why does it matter?
-Without State, every method becomes a chain of `if self.state == X: ... elif self.state == Y: ...`. As states grow, the class becomes unmaintainable. With State, each state is its own class; adding a new state doesn't touch existing ones.
-
-## Python-specific notes
-- Use `Enum` for state when transitions are simple and you don't need per-state behaviour encapsulation
-- Use full State objects (each state as a class) when each state has meaningfully different behaviour
-- For LLD interviews, the `Enum` + guard method approach is often cleaner and faster to write
-
-## When to use
-- An object's behaviour depends on its state and changes at runtime
-- You have many conditional statements based on a state variable
-- States have distinct behaviours that go beyond simple flag checks
-
-## When to avoid
-- Only 2-3 states with trivial transitions — a simple flag is cleaner
-- States share almost all behaviour — subclassing may be simpler
-
-## Quick example (Enum approach — preferred for interviews)
+## Minimal code
 ```python
 from enum import Enum, auto
 
-class TrafficLightState(Enum):
-    RED = auto()
-    GREEN = auto()
-    YELLOW = auto()
+class State(Enum):
+    IDLE = auto()
+    ACTIVE = auto()
+    DONE = auto()
 
-class TrafficLight:
-    _transitions = {
-        TrafficLightState.RED: TrafficLightState.GREEN,
-        TrafficLightState.GREEN: TrafficLightState.YELLOW,
-        TrafficLightState.YELLOW: TrafficLightState.RED,
-    }
+class Machine:
+    _next = {State.IDLE: State.ACTIVE, State.ACTIVE: State.DONE}
 
-    def __init__(self) -> None:
-        self.state = TrafficLightState.RED
+    def __init__(self):
+        self.state = State.IDLE
 
-    def change(self) -> None:
-        self.state = self._transitions[self.state]
+    def advance(self):
+        if self.state not in self._next:
+            raise ValueError("No transition from current state")
+        self.state = self._next[self.state]
 
-    def action(self) -> str:
-        return {
-            TrafficLightState.RED: "Stop",
-            TrafficLightState.GREEN: "Go",
-            TrafficLightState.YELLOW: "Caution",
-        }[self.state]
-
-light = TrafficLight()
-print(light.action())   # Stop
-light.change()
-print(light.action())   # Go
-light.change()
-print(light.action())   # Caution
+m = Machine()
+m.advance()          # IDLE → ACTIVE
+print(m.state)       # State.ACTIVE
 ```
 
-## Quick example (State objects — for complex per-state logic)
-```python
-from abc import ABC, abstractmethod
+## Real-world uses
+- Zomato order: PLACED → CONFIRMED → PREPARING → PICKED_UP → DELIVERED
+- ATM: IDLE → CARD_INSERTED → PIN_VERIFIED → DISPENSING
+- Hotel room booking: AVAILABLE → RESERVED → CHECKED_IN → CHECKED_OUT
 
-class State(ABC):
-    @abstractmethod
-    def handle(self, context: "Context") -> None: ...
+## One mistake
+Putting transition logic inside each state class creates circular imports and
+tight coupling. Keep the transition table in the context (the main class), not
+scattered across individual state objects.
 
-class IdleState(State):
-    def handle(self, context):
-        print("Idle: starting work")
-        context.state = WorkingState()
+## What to do next
+Two implementations exist — choose based on complexity:
+- **Enum + transition table** (`example1_traffic_light.py`): best for simple machines with 3–5
+  states and straightforward transitions. Less code, easier to read.
+- **State objects** (`example2_document_workflow.py`): best when each state has meaningfully
+  different behaviour. Keeps state-specific logic out of one giant class.
 
-class WorkingState(State):
-    def handle(self, context):
-        print("Working: done, going idle")
-        context.state = IdleState()
-
-class Context:
-    def __init__(self) -> None:
-        self.state: State = IdleState()
-
-    def request(self) -> None:
-        self.state.handle(self)
-```
-
-## Common mistakes
-- Hardcoding transitions inside state classes (creates circular dependencies) — keep transition logic in the context
-- Forgetting to validate transitions (allowing illegal state jumps)
-- Using State when a simple `Enum` flag would do
-
----
-
-## LLD Problems That Use This Pattern
-
-| Problem | States | Key observation |
-|---------|--------|----------------|
-| [03 ATM System](../../../04_lld_problems/03_atm_system/) | IDLE → CARD_INSERTED → PIN_VERIFIED → DISPENSING | `_require_state()` guard — cleanest Enum FSM example |
-| [15 Vending Machine](../../../04_lld_problems/15_vending_machine/) | IDLE → COIN_INSERTED → PRODUCT_SELECTED → DISPENSING | Same guard pattern, different domain — compare the two |
-| [08 Food Delivery](../../../04_lld_problems/08_food_delivery/) | PLACED → CONFIRMED → PREPARING → READY → PICKED_UP → DELIVERED | Long linear pipeline — state as progress tracker |
-| [07 Ride Sharing](../../../04_lld_problems/07_ride_sharing/) | Driver: OFFLINE / AVAILABLE / ON_TRIP; Trip: REQUESTED / IN_PROGRESS / COMPLETED | Two parallel FSMs on different entities |
-| [06 Movie Booking](../../../04_lld_problems/06_movie_ticket_booking/) | Seat: AVAILABLE → BOOKED | State at the entity level (per seat), not system level |
-
-**Best starting point:** ATM System + Vending Machine back-to-back — same `_require_state` technique, different state graphs.
+Try `exercises/starter.py` — build a vending machine using the Enum approach.

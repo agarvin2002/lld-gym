@@ -1,6 +1,23 @@
 """
-Exercise: Report Generator (Template Method Pattern)
-Fill in the TODOs. Run: /tmp/lld_venv/bin/pytest exercises/tests.py -v
+WHAT YOU'RE BUILDING
+====================
+A report generator that produces the same product data in three formats:
+CSV, HTML, and Markdown.
+
+The base class ReportGenerator owns the algorithm skeleton in generate():
+  1. Call format_header("Products")
+  2. Call format_row(row) for each row
+  3. Call format_footer(len(data))
+  4. Join all parts and return the complete string
+
+You implement three concrete subclasses that fill in the three formatting steps.
+The generate() method is already written — do not override it in subclasses.
+
+Classes to implement:
+  - ReportGenerator (ABC) — template method already stubbed below
+  - CSVReportGenerator    — comma-separated output
+  - HTMLReportGenerator   — HTML table output
+  - MarkdownReportGenerator — Markdown table output
 """
 from abc import ABC, abstractmethod
 
@@ -26,6 +43,7 @@ class ReportGenerator(ABC):
         # TODO: for each row in data, append self.format_row(row)
         # TODO: append self.format_footer(len(data))
         # TODO: return "".join(parts)
+        # HINT: parts is just a list of strings — build it step by step then join
         pass
 
     @abstractmethod
@@ -43,10 +61,6 @@ class ReportGenerator(ABC):
         """Return the report footer string."""
         ...
 
-
-# ---------------------------------------------------------------------------
-# Concrete generator 1: CSV
-# ---------------------------------------------------------------------------
 
 class CSVReportGenerator(ReportGenerator):
     """Generates a comma-separated values report."""
@@ -85,6 +99,7 @@ class MarkdownReportGenerator(ReportGenerator):
 
     def format_header(self, title: str) -> str:
         # TODO: return "| Name | Category | Price |\n|------|----------|-------|\n"
+        # HINT: Two lines — the column headers and the separator row of dashes
         pass
 
     def format_row(self, row: dict) -> str:
@@ -93,4 +108,19 @@ class MarkdownReportGenerator(ReportGenerator):
 
     def format_footer(self, total: int) -> str:
         # TODO: return f"\n*Total: {total} items*"
+        # HINT: The leading \n separates the last row from the footer
         pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/behavioral/template_method/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

@@ -1,3 +1,4 @@
+# Advanced topic — injecting payment strategies into a shopping cart so the cart never needs to change when a new method is added
 """
 Strategy Pattern — Example 2: Payment Processing
 =================================================
@@ -29,36 +30,35 @@ class CreditCardPayment(PaymentStrategy):
         self._cvv = cvv
 
     def pay(self, amount: float) -> PaymentResult:
-        # In reality: call payment gateway API
-        print(f"Charging ${amount:.2f} to card ending in {self._card}")
+        print(f"Charging ₹{amount:.2f} to card ending in {self._card}")
         return PaymentResult(True, "Approved", f"CC-{self._card}-{int(amount)}")
 
     def get_name(self) -> str:
         return f"Credit Card (****{self._card})"
 
 
-class PayPalPayment(PaymentStrategy):
-    def __init__(self, email: str) -> None:
-        self._email = email
+class UPIPayment(PaymentStrategy):
+    def __init__(self, vpa: str) -> None:
+        self._vpa = vpa  # e.g. user@paytm
 
     def pay(self, amount: float) -> PaymentResult:
-        print(f"PayPal: charging ${amount:.2f} to {self._email}")
-        return PaymentResult(True, "PayPal approved", f"PP-{hash(self._email)}")
+        print(f"UPI: collecting ₹{amount:.2f} from {self._vpa}")
+        return PaymentResult(True, "UPI approved", f"UPI-{hash(self._vpa)}")
 
     def get_name(self) -> str:
-        return f"PayPal ({self._email})"
+        return f"UPI ({self._vpa})"
 
 
-class CryptoPayment(PaymentStrategy):
-    def __init__(self, wallet_address: str) -> None:
-        self._wallet = wallet_address[:8] + "..."
+class NetBankingPayment(PaymentStrategy):
+    def __init__(self, bank_code: str) -> None:
+        self._bank = bank_code
 
     def pay(self, amount: float) -> PaymentResult:
-        print(f"Crypto: sending ${amount:.2f} worth to {self._wallet}")
-        return PaymentResult(True, "Transaction broadcast", f"CRYPTO-{self._wallet}")
+        print(f"Net Banking [{self._bank}]: processing ₹{amount:.2f}")
+        return PaymentResult(True, "Net Banking approved", f"NB-{self._bank}-{int(amount)}")
 
     def get_name(self) -> str:
-        return f"Crypto ({self._wallet})"
+        return f"Net Banking ({self._bank})"
 
 
 class ShoppingCart:
@@ -77,22 +77,22 @@ class ShoppingCart:
         if not self._payment:
             raise ValueError("No payment strategy set")
         total = sum(price for _, price in self._items)
-        print(f"\nCart total: ${total:.2f}")
+        print(f"\nCart total: ₹{total:.2f}")
         print(f"Paying with: {self._payment.get_name()}")
         return self._payment.pay(total)
 
 
 if __name__ == "__main__":
     cart = ShoppingCart()
-    cart.add_item("Laptop", 999.99)
-    cart.add_item("Mouse", 29.99)
+    cart.add_item("Laptop", 55000.00)
+    cart.add_item("Mouse", 1500.00)
 
     # Pay with credit card
     cart.set_payment_strategy(CreditCardPayment("4111111111111234", "123"))
     result = cart.checkout()
     print(f"Result: {result.message} (ID: {result.transaction_id})\n")
 
-    # Switch to PayPal — zero changes to cart
-    cart.set_payment_strategy(PayPalPayment("user@example.com"))
+    # Switch to UPI — zero changes to cart
+    cart.set_payment_strategy(UPIPayment("user@paytm"))
     result = cart.checkout()
     print(f"Result: {result.message}\n")

@@ -3,6 +3,9 @@ Strategy Pattern — Example 1: Sorting Algorithms
 ==================================================
 Different sort strategies are injected into a Sorter.
 Switching algorithm requires zero changes to Sorter.
+
+Real-world use: Flipkart search applies different ranking strategies
+(by price, by rating, by relevance) without changing the search controller.
 """
 from abc import ABC, abstractmethod
 

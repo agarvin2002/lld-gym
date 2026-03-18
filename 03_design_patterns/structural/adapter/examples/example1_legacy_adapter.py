@@ -9,6 +9,9 @@ Scenario:
 Solution:
     PrinterAdapter wraps LegacyPrinter and translates the new interface
     calls into old ones.
+
+Real-world use: Enterprise software that wraps old ERP printer APIs behind
+a clean interface so new services don't depend on legacy method signatures.
 """
 
 from __future__ import annotations
@@ -38,14 +41,10 @@ class Printer(ABC):
     """Target interface used by the new printing system."""
 
     @abstractmethod
-    def print(self, document: Document) -> None:
-        """Print the given document."""
-        ...
+    def print(self, document: Document) -> None: ...
 
     @abstractmethod
-    def get_status(self) -> str:
-        """Return a human-readable status string."""
-        ...
+    def get_status(self) -> str: ...
 
 
 # ---------------------------------------------------------------------------
@@ -53,76 +52,51 @@ class Printer(ABC):
 # ---------------------------------------------------------------------------
 
 class LegacyPrinter:
-    """
-    Old printer class from a legacy library.
-    Has a different interface from what the new system expects.
-    We CANNOT modify this class.
-    """
+    """Old printer class from a legacy library. We CANNOT modify this."""
 
     def __init__(self, model_name: str) -> None:
         self._model = model_name
         self._is_online = True
 
     def old_print(self, text: str, copies: int) -> None:
-        """Legacy print method — takes raw text and number of copies."""
         if not self._is_online:
             raise RuntimeError(f"{self._model} is offline")
         for i in range(1, copies + 1):
-            print(f"  [{self._model}] Printing copy {i}/{copies}:")
-            # Simulate printing first 80 chars of content
             preview = text[:80] + ("..." if len(text) > 80 else "")
-            print(f"    {preview}")
+            print(f"  [{self._model}] Copy {i}/{copies}: {preview}")
 
     def query_status(self) -> dict:
-        """Legacy status method — returns a raw dict."""
-        return {
-            "model": self._model,
-            "online": self._is_online,
-            "ink_level": 75,
-        }
+        return {"model": self._model, "online": self._is_online, "ink_level": 75}
 
     def set_offline(self) -> None:
         self._is_online = False
 
 
 # ---------------------------------------------------------------------------
-# Adapter (bridges LegacyPrinter to Printer interface)
+# Adapter
 # ---------------------------------------------------------------------------
 
 class PrinterAdapter(Printer):
-    """
-    Adapts LegacyPrinter to the new Printer interface.
-
-    The adapter:
-    1. Takes a Document and extracts what LegacyPrinter needs (text + copies).
-    2. Translates the status dict into a human-readable string.
-    """
+    """Adapts LegacyPrinter to the new Printer interface via composition."""
 
     def __init__(self, legacy_printer: LegacyPrinter) -> None:
-        self._legacy = legacy_printer
+        self._legacy = legacy_printer  # hold a reference — do not inherit
 
     def print(self, document: Document) -> None:
-        """Convert Document to args legacy printer understands."""
         full_text = f"Title: {document.title}\n\n{document.content}"
         self._legacy.old_print(text=full_text, copies=document.copies)
 
     def get_status(self) -> str:
-        """Convert legacy dict status to a clean string."""
         raw = self._legacy.query_status()
         state = "ONLINE" if raw["online"] else "OFFLINE"
-        return (
-            f"Printer '{raw['model']}' | Status: {state} | "
-            f"Ink: {raw['ink_level']}%"
-        )
+        return f"Printer '{raw['model']}' | {state} | Ink: {raw['ink_level']}%"
 
 
 # ---------------------------------------------------------------------------
-# New Printer implementation (no adapter needed — native implementation)
+# Modern printer (native interface — no adapter needed)
 # ---------------------------------------------------------------------------
 
 class ModernLaserPrinter(Printer):
-    """A new-style printer that natively implements the Printer interface."""
-
     def __init__(self, model: str) -> None:
         self._model = model
 
@@ -131,7 +105,7 @@ class ModernLaserPrinter(Printer):
             print(f"  [{self._model}] Copy {i}/{document.copies} of '{document.title}'")
 
     def get_status(self) -> str:
-        return f"Printer '{self._model}' | Status: ONLINE | Ink: 100%"
+        return f"Printer '{self._model}' | ONLINE | Ink: 100%"
 
 
 # ---------------------------------------------------------------------------
@@ -139,13 +113,11 @@ class ModernLaserPrinter(Printer):
 # ---------------------------------------------------------------------------
 
 class PrintingService:
-    """High-level service that prints documents through any Printer."""
-
     def __init__(self, printer: Printer) -> None:
         self._printer = printer
 
     def print_document(self, document: Document) -> None:
-        print(f"\nPrintingService: Sending {document} to printer...")
+        print(f"\nSending {document} to printer...")
         print(f"  Status: {self._printer.get_status()}")
         self._printer.print(document)
         print("  Done.")
@@ -156,50 +128,24 @@ class PrintingService:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("ADAPTER PATTERN - Legacy Printer Demo")
-    print("=" * 60)
+    report = Document("Q4 Report", "Revenue grew 23% YoY.", copies=2)
+    memo   = Document("Office Memo", "Please clean the kitchen.", copies=1)
 
-    # Create documents
-    report = Document(
-        title="Q4 Financial Report",
-        content="Revenue grew 23% YoY. EBITDA margin improved to 18%.",
-        copies=2,
-    )
-    memo = Document(
-        title="Office Memo",
-        content="Please remember to clean the kitchen after use. Thank you.",
-        copies=1,
-    )
-
-    # --- Modern printer (native interface, no adapter needed) ---
-    print("\n--- Modern Laser Printer (native interface) ---")
-    modern = ModernLaserPrinter("HP LaserJet Pro")
-    service = PrintingService(modern)
+    print("--- Modern Laser Printer (native interface) ---")
+    service = PrintingService(ModernLaserPrinter("HP LaserJet Pro"))
     service.print_document(report)
 
-    # --- Legacy printer via adapter ---
     print("\n--- Legacy Dot-Matrix via Adapter ---")
-    legacy = LegacyPrinter("Epson DX-500")
-    adapted = PrinterAdapter(legacy)
-
-    # Client code is identical — it doesn't know it's talking to a legacy printer
-    service2 = PrintingService(adapted)
+    legacy  = LegacyPrinter("Epson DX-500")
+    service2 = PrintingService(PrinterAdapter(legacy))
     service2.print_document(report)
     service2.print_document(memo)
 
-    # --- Show that status translation also works ---
-    print("\n--- Status Comparison ---")
-    print(f"Modern:  {modern.get_status()}")
-    print(f"Adapted: {adapted.get_status()}")
-
-    # --- Show offline behaviour passes through ---
-    print("\n--- Testing offline legacy printer ---")
+    print("\n--- Offline behaviour ---")
     legacy.set_offline()
-    print(f"After set_offline(): {adapted.get_status()}")
+    adapted = PrinterAdapter(legacy)
+    print(f"Status: {adapted.get_status()}")
     try:
         adapted.print(memo)
     except RuntimeError as e:
-        print(f"  Caught expected error: {e}")
-
-    print("\nDone.")
+        print(f"Caught expected error: {e}")

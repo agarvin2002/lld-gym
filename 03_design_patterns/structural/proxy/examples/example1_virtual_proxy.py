@@ -1,12 +1,12 @@
 """
 Proxy Pattern — Example 1: Virtual (Lazy) Proxy
-================================================
-A VirtualProxy defers the creation of an expensive object until the first time
-it is actually needed.  The caller never notices — the interface is identical.
 
-Scenario: Loading a high-resolution image from disk is slow.  We create a
-thumbnail placeholder immediately and only load the full image when `display()`
-is called for the first time.
+A VirtualProxy defers creating an expensive object until the first time it is
+actually needed. The caller never notices — the interface is identical.
+
+Real-world use: Django's SimpleLazyObject defers loading request.user from
+the database until the view first accesses it, saving a DB query on routes
+that never check the user.
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -38,15 +38,13 @@ class HighResImage(Image):
     """Simulates loading a large image file from disk."""
 
     def __init__(self, filename: str) -> None:
-        """Loading happens at construction time (expensive!)."""
         self._filename = filename
         print(f"  [HighResImage] Loading '{filename}' from disk … (slow)")
-        # Simulate expensive work — in real life: PIL.Image.open(filename)
+        # In real life: PIL.Image.open(filename)
         self._width = 4096
         self._height = 3072
 
     def display(self) -> str:
-        """Render the image."""
         return f"Displaying {self._filename} at {self._width}×{self._height}"
 
     def dimensions(self) -> tuple[int, int]:
@@ -59,7 +57,7 @@ class HighResImage(Image):
 
 class LazyImageProxy(Image):
     """
-    Virtual proxy: holds only the filename at construction.
+    Holds only the filename at construction time.
     Creates the real HighResImage on the first call to display() or dimensions().
     """
 
@@ -69,7 +67,7 @@ class LazyImageProxy(Image):
         print(f"  [LazyImageProxy] Registered '{filename}' (not yet loaded)")
 
     def _load(self) -> None:
-        """Lazy initialisation — called internally on first access."""
+        """Trigger real object creation on first access."""
         if self._real is None:
             print(f"  [LazyImageProxy] First access — triggering load …")
             self._real = HighResImage(self._filename)
@@ -84,7 +82,7 @@ class LazyImageProxy(Image):
 
     @property
     def is_loaded(self) -> bool:
-        """Useful for diagnostics / testing."""
+        """Useful for diagnostics and testing."""
         return self._real is not None
 
 
@@ -93,7 +91,7 @@ class LazyImageProxy(Image):
 # ---------------------------------------------------------------------------
 
 def render_gallery(images: list[Image]) -> None:
-    """Simulates a gallery that only displays visible images."""
+    """Simulates a gallery that renders every visible image."""
     for img in images:
         print(f"  → {img.display()}")
 
@@ -111,7 +109,6 @@ if __name__ == "__main__":
 
     print("\n=== Checking load state ===")
     for i, img in enumerate(gallery):
-        # We know they are LazyImageProxy at this point for the isinstance check
         if isinstance(img, LazyImageProxy):
             print(f"  gallery[{i}] loaded: {img.is_loaded}")
 

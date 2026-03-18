@@ -8,6 +8,10 @@ Each family produces three coordinated widgets: Button, TextInput, Checkbox.
 The Dialog client only knows about UIFactory and the abstract widget interfaces.
 Swapping the factory switches the entire theme without any changes to Dialog.
 
+Real-world use: Flipkart's app ships Light and Dark themes. Each theme is a
+factory that produces matching nav bars, buttons, and input fields. The screen
+components never import concrete theme classes — they accept a ThemeFactory.
+
 Run: python example1_ui_themes.py
 """
 
@@ -151,24 +155,17 @@ class Dialog:
     A login dialog that renders its widgets using whatever UIFactory it receives.
 
     The Dialog never imports LightThemeFactory or DarkThemeFactory.
-    It depends only on UIFactory (the abstract interface).
     Swapping the factory is the only change needed to switch themes.
     """
 
     def __init__(self, factory: UIFactory) -> None:
-        # Build widgets at construction time using the injected factory.
         # All three widgets are guaranteed to come from the same theme.
         self._button = factory.create_button()
         self._text_input = factory.create_text_input()
         self._checkbox = factory.create_checkbox()
 
     def render_login(self) -> str:
-        """
-        Compose all three widgets into a login form string.
-
-        Returns:
-            A multiline string representing the rendered form.
-        """
+        """Compose all three widgets into a login form string."""
         lines = [
             "=== Login Form ===",
             f"Username: {self._text_input.render()}",

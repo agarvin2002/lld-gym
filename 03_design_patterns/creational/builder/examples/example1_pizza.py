@@ -6,6 +6,10 @@ Demonstrates:
 - A PizzaBuilder with fluent setters (each returns self)
 - Method chaining to construct two different pizzas
 - A PizzaDirector with named convenience methods (margherita, pepperoni)
+
+Real-world use: Swiggy's "Build Your Own Meal" flow — you pick base, protein,
+toppings, and extras one step at a time. A Director handles fixed combos like
+"Signature Meal Deal." The order object is only created at checkout.
 """
 from __future__ import annotations
 
@@ -44,12 +48,8 @@ class PizzaBuilder:
 
     Usage:
         pizza = (PizzaBuilder()
-                 .size("large")
-                 .crust("thin")
-                 .sauce("tomato")
-                 .add_topping("mushrooms")
-                 .extra_cheese()
-                 .build())
+                 .size("large").crust("thin").sauce("tomato")
+                 .add_topping("mushrooms").extra_cheese().build())
     """
 
     def __init__(self) -> None:
@@ -58,8 +58,6 @@ class PizzaBuilder:
         self._sauce: str = "tomato"
         self._toppings: list[str] = []
         self._extra_cheese: bool = False
-
-    # --- fluent setters ---
 
     def size(self, s: str) -> PizzaBuilder:
         self._size = s
@@ -81,15 +79,13 @@ class PizzaBuilder:
         self._extra_cheese = True
         return self
 
-    # --- terminal step ---
-
     def build(self) -> Pizza:
-        """Construct and return the immutable Pizza product."""
+        """Construct and return the finished Pizza."""
         return Pizza(
             size=self._size,
             crust=self._crust,
             sauce=self._sauce,
-            toppings=list(self._toppings),   # snapshot — caller cannot mutate builder's list
+            toppings=list(self._toppings),  # snapshot so caller can't mutate the builder's list
             extra_cheese=self._extra_cheese,
         )
 
@@ -99,18 +95,13 @@ class PizzaBuilder:
 # ---------------------------------------------------------------------------
 
 class PizzaDirector:
-    """
-    Encodes well-known pizza configurations.
-
-    The Director owns a builder and calls the right setters in the right order
-    so clients don't need to remember each preset's ingredients.
-    """
+    """Encodes well-known pizza presets so callers don't need to remember ingredients."""
 
     def __init__(self, builder: PizzaBuilder) -> None:
         self._builder = builder
 
     def _reset(self) -> None:
-        """Re-initialise the builder so presets don't bleed into each other."""
+        """Fresh builder each time so presets don't bleed into each other."""
         self._builder = PizzaBuilder()
 
     def margherita(self) -> Pizza:
@@ -140,34 +131,16 @@ class PizzaDirector:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # --- Custom pizzas via method chaining ---
-    custom_veggie = (PizzaBuilder()
-                     .size("small")
-                     .crust("whole-wheat")
-                     .sauce("pesto")
-                     .add_topping("bell peppers")
-                     .add_topping("olives")
-                     .add_topping("sun-dried tomatoes")
-                     .build())
+    # Custom pizza via method chaining
+    custom = (PizzaBuilder()
+              .size("small").crust("whole-wheat").sauce("pesto")
+              .add_topping("bell peppers").add_topping("olives")
+              .build())
+    print("=== Custom Pizza ===")
+    print(custom)
 
-    custom_meat = (PizzaBuilder()
-                   .size("large")
-                   .crust("stuffed")
-                   .sauce("bbq")
-                   .add_topping("chicken")
-                   .add_topping("bacon")
-                   .extra_cheese()
-                   .build())
-
-    print("=== Custom Pizzas ===")
-    print(custom_veggie)
-    print(custom_meat)
-
-    # --- Preset pizzas via Director ---
+    # Preset pizzas via Director
     director = PizzaDirector(PizzaBuilder())
-    margherita = director.margherita()
-    pepperoni  = director.pepperoni()
-
     print("\n=== Director Presets ===")
-    print(f"Margherita : {margherita}")
-    print(f"Pepperoni  : {pepperoni}")
+    print(f"Margherita : {director.margherita()}")
+    print(f"Pepperoni  : {director.pepperoni()}")

@@ -1,147 +1,64 @@
 # Decorator Pattern
 
-## 1. What Is It?
+## What is it?
+The Decorator pattern adds behaviour to an object by wrapping it in another object that shares the same interface.
+The wrapper calls through to the original and adds something before or after — logging, caching, auth, retries.
+You can stack multiple wrappers. Each layer is unaware of the others.
 
-The Decorator pattern attaches additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.
+## Analogy
+Think of a plain filter coffee. Add a shot of vanilla syrup — still a coffee. Add whipped cream on top — still a coffee.
+Each addition wraps the previous cup. You can add or remove toppings freely.
+The barista (your client code) always handles a "coffee" — they never need to know how many layers are inside.
 
-In short: **wrap an object with another object that adds behavior before or after delegating to the original.**
-
----
-
-## 2. Analogy: Ice Cream Toppings
-
-Start with a plain vanilla ice cream. Now add chocolate sauce. Now add whipped cream. Now add sprinkles.
-
-Each topping *wraps* the previous creation — it doesn't change what's underneath. You can add, remove, or reorder toppings freely. The result is always still "ice cream" (same interface), just with extra stuff.
-
-- **Component**: plain ice cream
-- **Decorators**: chocolate sauce, whipped cream, sprinkles
-- **Key insight**: each layer shares the same interface, so you can nest them infinitely
-
----
-
-## 3. Python's `@decorator` vs GoF Decorator Pattern
-
-These are **two different things that share a name**.
-
-### Python's `@decorator` syntax
-
-```python
-def log(func):
-    def wrapper(*args, **kwargs):
-        print(f"Calling {func.__name__}")
-        return func(*args, **kwargs)
-    return wrapper
-
-@log
-def greet(name: str) -> str:
-    return f"Hello, {name}"
-```
-
-- Applies to **functions**
-- Done at **class/module load time** (decoration happens once)
-- Returns a **new function** that wraps the original
-- Primarily a Python language feature
-
-### GoF Decorator Pattern
-
-```python
-class LoggingService(Service):
-    def __init__(self, wrapped: Service):
-        self._wrapped = wrapped
-
-    def process(self, data: str) -> str:
-        print("Before")
-        result = self._wrapped.process(data)
-        print("After")
-        return result
-```
-
-- Applies to **objects** (instances)
-- Done at **runtime** — you choose what to wrap at any point
-- Returns an **object** implementing the same interface
-- A structural design pattern
-
-**Rule of thumb**: Python `@decorator` is for aspect-like wrapping of functions. GoF Decorator is for dynamic composition of object behavior.
-
----
-
-## 4. Use Cases
-
-- **Logging**: transparently log all calls to a service
-- **Authentication / Authorization**: check permissions before delegating
-- **Caching**: cache results, skip computation on repeat calls
-- **Rate limiting**: throttle calls without touching the service
-- **Retry logic**: retry failed operations transparently
-- **Compression**: transparently compress/decompress data streams
-- **Validation**: validate input before passing to the real implementation
-
----
-
-## 5. Quick Example: Coffee Shop
-
+## Minimal code
 ```python
 from abc import ABC, abstractmethod
 
-class Coffee(ABC):
+class NotificationService(ABC):
     @abstractmethod
-    def cost(self) -> float: ...
-    @abstractmethod
-    def description(self) -> str: ...
+    def send(self, message: str) -> None: ...
 
-class Espresso(Coffee):
-    def cost(self) -> float: return 2.00
-    def description(self) -> str: return "Espresso"
+class EmailService(NotificationService):
+    def send(self, message: str) -> None:
+        print(f"Email: {message}")
 
-class CoffeeDecorator(Coffee):
-    def __init__(self, coffee: Coffee) -> None:
-        self._coffee = coffee
-    def cost(self) -> float: return self._coffee.cost()
-    def description(self) -> str: return self._coffee.description()
+class LoggingDecorator(NotificationService):
+    def __init__(self, wrapped: NotificationService) -> None:
+        self._wrapped = wrapped
 
-class Milk(CoffeeDecorator):
-    def cost(self) -> float: return self._coffee.cost() + 0.30
-    def description(self) -> str: return self._coffee.description() + ", Milk"
+    def send(self, message: str) -> None:
+        print(f"[LOG] Sending: {message}")
+        self._wrapped.send(message)   # delegate — never skip this
 
-class Sugar(CoffeeDecorator):
-    def cost(self) -> float: return self._coffee.cost() + 0.10
-    def description(self) -> str: return self._coffee.description() + ", Sugar"
+class RetryDecorator(NotificationService):
+    def __init__(self, wrapped: NotificationService, retries: int = 3) -> None:
+        self._wrapped = wrapped
+        self._retries = retries
 
-# Compose at runtime
-drink = Sugar(Milk(Milk(Espresso())))
-print(drink.description())  # Espresso, Milk, Milk, Sugar
-print(drink.cost())          # 2.70
+    def send(self, message: str) -> None:
+        for _ in range(self._retries):
+            try:
+                self._wrapped.send(message)
+                return
+            except Exception:
+                pass
+
+# Compose at runtime — client only sees NotificationService
+service = RetryDecorator(LoggingDecorator(EmailService()))
+service.send("Your Paytm payment of ₹500 is confirmed.")
 ```
 
----
+## Real-world uses
+- Logging every call to a Razorpay payment service without touching its code
+- Adding auth token injection to an HTTP client used by a Swiggy-style delivery service
+- Caching repeated database reads in a product catalogue
 
-## 6. Structure (UML)
+## One mistake
+Forgetting to call `self._wrapped.send(...)` inside the decorator.
+If you add behaviour but never delegate to the wrapped object, the original service never runs.
+Always delegate — that is the whole point of the pattern.
 
-```
-    Component (ABC)
-    ┌───────────────┐
-    │ + operation() │
-    └───────────────┘
-           ▲
-           │ implements
-    ┌──────┴─────────┐         ┌──────────────────┐
-    │ ConcreteComponent│        │ Decorator (ABC)   │
-    │ + operation()   │        │ - wrappee: Component│
-    └─────────────────┘        │ + operation()     │
-                               └──────────┬────────┘
-                                          ▲
-                               ┌──────────┴────────┐
-                               │ ConcreteDecorator  │
-                               │ + operation()      │
-                               └────────────────────┘
-```
-
----
-
-## 7. Common Mistakes
-
-1. **Confusing Python `@decorator` with GoF Decorator**: They're different. GoF Decorator is about objects, not functions.
-2. **Breaking the interface contract**: Every decorator must implement the full interface — no skipping methods.
-3. **Deep nesting without transparency**: If you forget to delegate to `self._wrapped`, the underlying object never gets called.
-4. **Using decorators when subclassing is cleaner**: If you only have one combination, a subclass is simpler.
-5. **Forgetting to forward all interface methods**: If your base class has 10 methods and you only override 3, you need a base `Decorator` class that delegates all 10.
+## What to do next
+- Read `examples/example1_logging_decorator.py` to see logging and caching decorators on a data service.
+- Read `examples/example2_auth_decorator.py` to see auth and retry decorators on an API client.
+- Then open `exercises/starter.py` and build your own text formatter decorators.

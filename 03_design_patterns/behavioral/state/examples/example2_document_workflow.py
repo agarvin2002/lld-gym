@@ -1,3 +1,4 @@
+# Advanced topic — using full State objects instead of Enum when each state has meaningfully different behaviour
 """
 State Pattern — Example 2: Document Approval Workflow (State objects)
 =====================================================================

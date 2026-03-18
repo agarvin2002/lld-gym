@@ -1,14 +1,17 @@
-"""Factory Pattern — Example 2: Notification Factory.
+# Advanced topic — registry-based factory that supports runtime registration of new types
+"""
+Factory Pattern — Example 2: Registry-Based Notification Factory
 
-Shows a registry-based factory that supports runtime registration
-of new types without modifying the factory class (Open/Closed Principle).
+New channel types register themselves at startup. Adding WhatsApp later
+means one register() call — no changes to NotificationFactory.
+
+Real-world use: Swiggy/Zomato order alerts over Email, SMS, or push;
+adding a new channel without touching existing factory code.
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-
-# ── Product Interface ─────────────────────────────────────────────────────────
 
 @dataclass
 class Message:
@@ -19,23 +22,16 @@ class Message:
 
 class Notification(ABC):
     @abstractmethod
-    def send(self, message: Message) -> str:
-        """Send the message and return a delivery receipt string."""
+    def send(self, message: Message) -> str: ...
 
-
-# ── Concrete Products ─────────────────────────────────────────────────────────
 
 class EmailNotification(Notification):
     def send(self, message: Message) -> str:
-        return (
-            f"[EMAIL] To: {message.recipient} | "
-            f"Subject: {message.subject} | Body: {message.body}"
-        )
+        return f"[EMAIL] To: {message.recipient} | {message.subject}: {message.body}"
 
 
 class SMSNotification(Notification):
     def send(self, message: Message) -> str:
-        # SMS is short: truncate body
         snippet = message.body[:40] + ("…" if len(message.body) > 40 else "")
         return f"[SMS] To: {message.recipient} | {snippet}"
 
@@ -45,33 +41,22 @@ class PushNotification(Notification):
         return f"[PUSH] → {message.recipient}: {message.subject}"
 
 
-class SlackNotification(Notification):
-    def __init__(self, channel: str = "#general") -> None:
-        self._channel = channel
-
-    def send(self, message: Message) -> str:
-        return f"[SLACK {self._channel}] {message.subject}: {message.body}"
-
-
-# ── Registry-Based Factory ─────────────────────────────────────────────────────
-
 class NotificationFactory:
     """
-    Registry-based factory: supports registering new channel types at runtime.
-    New channels don't require touching existing factory code.
+    Registry-based factory. New channels are added via register() — the factory
+    class itself never needs to change (Open/Closed Principle).
     """
     _registry: dict[str, type[Notification]] = {}
 
     @classmethod
-    def register(cls, channel: str, notification_class: type[Notification]) -> None:
-        cls._registry[channel.lower()] = notification_class
+    def register(cls, channel: str, cls_: type[Notification]) -> None:
+        cls._registry[channel.lower()] = cls_
 
     @classmethod
     def create(cls, channel: str, **kwargs) -> Notification:
         key = channel.lower()
         if key not in cls._registry:
-            available = list(cls._registry)
-            raise ValueError(f"Unknown channel {channel!r}. Available: {available}")
+            raise ValueError(f"Unknown channel {channel!r}. Available: {list(cls._registry)}")
         return cls._registry[key](**kwargs)
 
     @classmethod
@@ -79,54 +64,24 @@ class NotificationFactory:
         return list(cls._registry)
 
 
-# Register built-in channels
+# Register built-in channels at module load time
 NotificationFactory.register("email", EmailNotification)
 NotificationFactory.register("sms",   SMSNotification)
 NotificationFactory.register("push",  PushNotification)
 
 
-# ── Notification Service (uses factory) ───────────────────────────────────────
-
-class NotificationService:
-    """High-level service; depends only on the factory + Notification interface."""
-
-    def notify(self, channel: str, recipient: str, subject: str, body: str) -> str:
-        notification = NotificationFactory.create(channel)
-        message = Message(recipient=recipient, subject=subject, body=body)
-        return notification.send(message)
-
-    def broadcast(self, channels: list[str], recipient: str, subject: str, body: str) -> list[str]:
-        """Send on multiple channels, collecting receipts."""
-        message = Message(recipient=recipient, subject=subject, body=body)
-        receipts = []
-        for channel in channels:
-            notification = NotificationFactory.create(channel)
-            receipts.append(notification.send(message))
-        return receipts
-
-
-# ── Demo ──────────────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
-    service = NotificationService()
+    msg = Message("alice@example.com", "Order update", "Your order has shipped.")
 
-    print("=== Single channel ===")
     for channel in ["email", "sms", "push"]:
-        receipt = service.notify(channel, "alice@example.com", "Hello", "Your order has shipped.")
-        print(receipt)
+        n = NotificationFactory.create(channel)
+        print(n.send(msg))
 
-    print("\n=== Broadcast ===")
-    receipts = service.broadcast(
-        ["email", "sms"],
-        "bob@example.com",
-        "Reminder",
-        "Your meeting starts in 15 minutes.",
-    )
-    for r in receipts:
-        print(r)
+    # Add a new channel at runtime — no factory code changes needed
+    class SlackNotification(Notification):
+        def send(self, message: Message) -> str:
+            return f"[SLACK] {message.subject}: {message.body}"
 
-    print("\n=== Register custom channel ===")
     NotificationFactory.register("slack", SlackNotification)
-    receipt = service.notify("slack", "team", "Deploy done", "v2.3.1 is live.")
-    print(receipt)
-    print("Available channels:", NotificationFactory.available_channels())
+    print(NotificationFactory.create("slack").send(msg))
+    print("Channels:", NotificationFactory.available_channels())

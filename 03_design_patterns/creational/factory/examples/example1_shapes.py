@@ -1,8 +1,11 @@
 """Factory Pattern — Example 1: Shape Factory.
 
 The Factory pattern defines an interface for creating objects but lets
-subclasses or a factory function decide which class to instantiate.
+a factory function or subclass decide which class to instantiate.
 This decouples object creation from the code that uses the objects.
+
+Real-world use: shape renderers in design tools, geometry engines,
+map tile generators (circle/polygon/line created from GeoJSON type strings).
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -68,15 +71,12 @@ class Triangle(Shape):
         return f"Triangle({self._a},{self._b},{self._c})"
 
 
-# ── Factory Function (Simple Factory) ────────────────────────────────────────
+# ── Simple Factory Function ───────────────────────────────────────────────────
 # Not a Gang-of-Four pattern — just a convenient creation function.
-# The "real" Factory Method pattern is below.
+# Callers don't import Circle/Rectangle/Triangle directly.
 
 def create_shape(shape_type: str, **kwargs) -> Shape:
-    """
-    Create a shape by name. Callers don't import Circle/Rectangle/Triangle.
-    Adding a new shape only requires editing this function (or registering it).
-    """
+    """Create a shape by name. kwargs are forwarded to the constructor."""
     registry: dict[str, type[Shape]] = {
         "circle":    Circle,
         "rectangle": Rectangle,
@@ -89,9 +89,11 @@ def create_shape(shape_type: str, **kwargs) -> Shape:
 
 # ── Factory Method Pattern ────────────────────────────────────────────────────
 # The creator defines the interface; subclasses decide which product to make.
+# TIP: the creator's business logic (get_info) is reused — only creation varies.
 
 class ShapeFactory(ABC):
     """Creator — defines the factory method."""
+
     @abstractmethod
     def create_shape(self) -> Shape:
         """Factory Method: subclasses override this."""

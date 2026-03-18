@@ -7,7 +7,10 @@ Scenario:
     1. Logging: log every call with timestamp and result
     2. Caching: cache read results, skip re-fetching same key
 
-    These concerns should be composable and transparent to the client.
+    These concerns are composable and transparent to the client.
+
+Real-world use: Redis caching layers and audit-log decorators in Flipkart/Amazon
+product catalogue services — the underlying DB service is unchanged.
 """
 
 from __future__ import annotations
@@ -25,28 +28,20 @@ class DataService(ABC):
     """Abstract interface for a key-value data service."""
 
     @abstractmethod
-    def read(self, key: str) -> Optional[str]:
-        """Read a value by key. Returns None if key not found."""
-        ...
+    def read(self, key: str) -> Optional[str]: ...
 
     @abstractmethod
-    def write(self, key: str, value: str) -> None:
-        """Write a value for the given key."""
-        ...
+    def write(self, key: str, value: str) -> None: ...
 
     @abstractmethod
-    def delete(self, key: str) -> bool:
-        """Delete a key. Returns True if it existed."""
-        ...
+    def delete(self, key: str) -> bool: ...
 
     @abstractmethod
-    def exists(self, key: str) -> bool:
-        """Return True if the key exists in the store."""
-        ...
+    def exists(self, key: str) -> bool: ...
 
 
 # ---------------------------------------------------------------------------
-# Concrete Component (the real implementation)
+# Concrete Component
 # ---------------------------------------------------------------------------
 
 class InMemoryDataService(DataService):
@@ -58,8 +53,7 @@ class InMemoryDataService(DataService):
 
     def read(self, key: str) -> Optional[str]:
         self._call_count += 1
-        # Simulate a slow storage read
-        time.sleep(0.05)
+        time.sleep(0.05)   # simulate slow storage
         return self._store.get(key)
 
     def write(self, key: str, value: str) -> None:
@@ -82,14 +76,13 @@ class InMemoryDataService(DataService):
 
 
 # ---------------------------------------------------------------------------
-# Base Decorator (forwards all calls — subclasses only override what they need)
+# Base Decorator — forwards all calls; subclasses override what they need
 # ---------------------------------------------------------------------------
 
 class DataServiceDecorator(DataService):
     """
-    Base decorator class.
-    Holds a reference to a DataService and forwards all calls.
-    Subclasses override specific methods to add behavior.
+    Base decorator. Holds a reference and forwards every call.
+    Subclasses override only the methods they care about.
     """
 
     def __init__(self, wrapped: DataService) -> None:
@@ -109,20 +102,18 @@ class DataServiceDecorator(DataService):
 
 
 # ---------------------------------------------------------------------------
-# Concrete Decorator 1: Logging
+# Decorator 1: Logging
 # ---------------------------------------------------------------------------
 
 class LoggingDataService(DataServiceDecorator):
-    """
-    Logs every read/write/delete with timestamp and result.
-    """
+    """Logs every read/write/delete with a timestamp."""
 
     def __init__(self, wrapped: DataService, prefix: str = "LOG") -> None:
         super().__init__(wrapped)
         self._prefix = prefix
         self._log: list[str] = []
 
-    def _log_entry(self, operation: str, details: str) -> None:
+    def _record(self, operation: str, details: str) -> None:
         ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         entry = f"[{self._prefix}] {ts} | {operation} | {details}"
         self._log.append(entry)
@@ -130,18 +121,16 @@ class LoggingDataService(DataServiceDecorator):
 
     def read(self, key: str) -> Optional[str]:
         result = self._wrapped.read(key)
-        status = f"key='{key}' → '{result}'" if result else f"key='{key}' → MISS"
-        self._log_entry("READ ", status)
+        self._record("READ ", f"key='{key}' → {'MISS' if result is None else repr(result)}")
         return result
 
     def write(self, key: str, value: str) -> None:
         self._wrapped.write(key, value)
-        self._log_entry("WRITE", f"key='{key}', value='{value}'")
+        self._record("WRITE", f"key='{key}', value='{value}'")
 
     def delete(self, key: str) -> bool:
         result = self._wrapped.delete(key)
-        status = "DELETED" if result else "NOT_FOUND"
-        self._log_entry("DEL  ", f"key='{key}' → {status}")
+        self._record("DEL  ", f"key='{key}' → {'DELETED' if result else 'NOT_FOUND'}")
         return result
 
     @property
@@ -150,14 +139,14 @@ class LoggingDataService(DataServiceDecorator):
 
 
 # ---------------------------------------------------------------------------
-# Concrete Decorator 2: Caching
+# Decorator 2: Caching
 # ---------------------------------------------------------------------------
 
 class CachingDataService(DataServiceDecorator):
     """
     Caches read results in memory.
-    - On read: check cache first, call wrapped service only on cache miss.
-    - On write/delete: invalidate the relevant cache entry.
+    - On read: return cached value if present; otherwise fetch and cache.
+    - On write/delete: evict the relevant key from cache.
     """
 
     def __init__(self, wrapped: DataService, max_size: int = 100) -> None:
@@ -171,38 +160,25 @@ class CachingDataService(DataServiceDecorator):
         if key in self._cache:
             self._hits += 1
             return self._cache[key]
-
         self._misses += 1
         value = self._wrapped.read(key)
-
         if len(self._cache) < self._max_size:
             self._cache[key] = value
-
         return value
 
     def write(self, key: str, value: str) -> None:
-        # Invalidate cache on write
-        self._cache.pop(key, None)
+        self._cache.pop(key, None)   # invalidate stale entry
         self._wrapped.write(key, value)
 
     def delete(self, key: str) -> bool:
-        # Invalidate cache on delete
-        self._cache.pop(key, None)
+        self._cache.pop(key, None)   # invalidate stale entry
         return self._wrapped.delete(key)
 
     @property
-    def cache_hit_rate(self) -> float:
-        total = self._hits + self._misses
-        return self._hits / total if total > 0 else 0.0
-
-    @property
     def stats(self) -> dict:
-        return {
-            "hits": self._hits,
-            "misses": self._misses,
-            "cached_keys": len(self._cache),
-            "hit_rate": f"{self.cache_hit_rate:.1%}",
-        }
+        total = self._hits + self._misses
+        rate = self._hits / total if total > 0 else 0.0
+        return {"hits": self._hits, "misses": self._misses, "hit_rate": f"{rate:.1%}"}
 
 
 # ---------------------------------------------------------------------------
@@ -210,60 +186,27 @@ class CachingDataService(DataServiceDecorator):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("DECORATOR PATTERN - Logging & Caching Demo")
-    print("=" * 60)
+    # Stack: CachingDataService → LoggingDataService → InMemoryDataService
+    base   = InMemoryDataService()
+    logged = LoggingDataService(base, prefix="STORE")
+    cached = CachingDataService(logged, max_size=50)
 
-    # --- 1. Plain service ---
-    print("\n--- 1. Plain InMemoryDataService ---")
-    plain = InMemoryDataService()
-    plain.write("user:1", "Alice")
-    plain.write("user:2", "Bob")
-    print("Read user:1 →", plain.read("user:1"))
-    print("Call count:", plain.call_count)
+    cached.write("user:1", "Alice")
+    cached.write("user:2", "Bob")
 
-    # --- 2. Logging only ---
-    print("\n--- 2. With LoggingDataService ---")
-    service = InMemoryDataService()
-    logged = LoggingDataService(service, prefix="DS")
-    logged.write("config:debug", "true")
-    logged.read("config:debug")
-    logged.read("config:missing")
-    logged.delete("config:debug")
-    logged.delete("config:debug")   # second delete → NOT_FOUND
+    print("\nFirst reads (cache miss → hits log → hits storage):")
+    print(cached.read("user:1"))
+    print(cached.read("user:2"))
+    print("Stats:", cached.stats)
 
-    # --- 3. Stacked: CachingDataService(LoggingDataService(InMemoryDataService)) ---
-    print("\n--- 3. Stacked: Cache → Log → Storage ---")
-    base = InMemoryDataService()
-    logged2 = LoggingDataService(base, prefix="STACK")
-    cached = CachingDataService(logged2, max_size=50)
+    print("\nSecond reads (cache hit — log and storage not called):")
+    print(cached.read("user:1"))
+    print(cached.read("user:2"))
+    print("Stats:", cached.stats)
 
-    # Write some data
-    cached.write("product:101", "Widget A")
-    cached.write("product:102", "Widget B")
+    print(f"\nUnderlying storage calls: {base.call_count}")
 
-    print("\nFirst reads (cache miss → goes to log → goes to storage):")
-    r1 = cached.read("product:101")
-    r2 = cached.read("product:102")
-
-    print(f"\nRead results: {r1}, {r2}")
-    print("Cache stats after first reads:", cached.stats)
-
-    print("\nSecond reads (cache hit → no log, no storage call):")
-    r1b = cached.read("product:101")
-    r2b = cached.read("product:102")
-    print(f"Read results: {r1b}, {r2b}")
-    print("Cache stats after second reads:", cached.stats)
-
-    print(f"\nUnderlying storage call_count: {base.call_count}")
-    print("(writes=2, reads=2 cache misses, delete=0 → expected: 4)")
-
-    # Demonstrate cache invalidation on delete
-    print("\n--- 4. Cache Invalidation ---")
-    cached.delete("product:101")
-    print("After delete, re-reading product:101...")
-    val = cached.read("product:101")
-    print(f"Result: {val}")
-    print("Cache stats:", cached.stats)
-
-    print("\nDone.")
+    print("\nCache invalidation on delete:")
+    cached.delete("user:1")
+    print("Re-read user:1:", cached.read("user:1"))
+    print("Stats:", cached.stats)

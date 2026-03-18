@@ -5,10 +5,10 @@ A DataPipeline base class owns the fixed sequence:
     connect → extract → validate → transform → load → disconnect
 
 Each concrete pipeline fills in what those steps mean for its data source.
-
-This demonstrates the Hollywood Principle:
-    "Don't call us, we'll call you."
 The base class calls the subclass's methods, never the reverse.
+
+Real-world use: Aadhaar data ingestion pipelines follow the same
+ETL skeleton; only the connector and transformer differ per data source.
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod

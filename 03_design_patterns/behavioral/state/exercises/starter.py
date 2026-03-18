@@ -1,94 +1,122 @@
-"""State Pattern Exercise — Vending Machine Reference Solution."""
+"""
+WHAT YOU'RE BUILDING
+====================
+A vending machine with four states:
+  - IDLE         — waiting for money
+  - HAS_MONEY    — coin inserted, waiting for product selection
+  - DISPENSING   — product selected, ready to dispense
+  - OUT_OF_STOCK — all products exhausted
+
+Operations: insert_coin, select_product, dispense, refund, restock.
+Each operation is only valid in certain states — invalid calls raise
+InvalidStateError.
+
+Classes you must implement:
+  - VendingMachineState (Enum)
+  - InvalidStateError (Exception)
+  - Product (dataclass with name, price, quantity)
+  - VendingMachine
+"""
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
 
+# TODO: Define VendingMachineState as an Enum with four values:
+#       IDLE, HAS_MONEY, DISPENSING, OUT_OF_STOCK
 class VendingMachineState(Enum):
-    IDLE = "IDLE"
-    HAS_MONEY = "HAS_MONEY"
-    DISPENSING = "DISPENSING"
-    OUT_OF_STOCK = "OUT_OF_STOCK"
+    pass
 
 
+# TODO: Define InvalidStateError as a simple Exception subclass
 class InvalidStateError(Exception):
     pass
 
 
+# TODO: Define Product as a dataclass with fields: name (str), price (float), quantity (int)
 @dataclass
 class Product:
-    name: str
-    price: float
-    quantity: int
+    pass
 
 
 class VendingMachine:
+    """
+    A state-driven vending machine.
+
+    Constructor:
+        products: dict mapping code (str) → tuple(name, price, quantity)
+        Example: {"A1": ("Cola", 1.50, 3)}
+    """
+
     def __init__(self, products: dict[str, tuple[str, float, int]]) -> None:
-        self._products: dict[str, Product] = {
-            code: Product(name, price, qty)
-            for code, (name, price, qty) in products.items()
-        }
-        self._balance: float = 0.0
-        self._selected: str | None = None
-        self.state = VendingMachineState.IDLE
-        self._check_out_of_stock()
+        # TODO: Build self._products — a dict mapping code → Product instance
+        # TODO: Set self._balance = 0.0
+        # TODO: Set self._selected = None  (holds the selected product code)
+        # TODO: Set self.state = VendingMachineState.IDLE
+        # TODO: Call self._check_out_of_stock() to handle an initially empty machine
+        pass
 
     def _require_state(self, *states: VendingMachineState) -> None:
-        if self.state not in states:
-            allowed = ", ".join(s.value for s in states)
-            raise InvalidStateError(
-                f"Operation requires state {allowed}, current state is {self.state.value}"
-            )
+        # TODO: If self.state is NOT in the given states, raise InvalidStateError
+        # HINT: Build an error message like "Operation requires state X, current state is Y"
+        pass
 
     def _check_out_of_stock(self) -> None:
-        if all(p.quantity == 0 for p in self._products.values()):
-            self.state = VendingMachineState.OUT_OF_STOCK
+        # TODO: If ALL products have quantity == 0, set state to OUT_OF_STOCK
+        pass
 
     def insert_coin(self, amount: float) -> None:
-        self._require_state(VendingMachineState.IDLE, VendingMachineState.HAS_MONEY)
-        self._balance += amount
-        self.state = VendingMachineState.HAS_MONEY
+        # TODO: Only valid in IDLE or HAS_MONEY — call _require_state
+        # TODO: Add amount to self._balance
+        # TODO: Transition to HAS_MONEY
+        pass
 
     def select_product(self, code: str) -> str:
-        self._require_state(VendingMachineState.HAS_MONEY)
-        if code not in self._products:
-            raise ValueError(f"Unknown product code: {code!r}")
-        product = self._products[code]
-        if product.quantity == 0:
-            raise ValueError(f"Product {code!r} is out of stock")
-        if self._balance < product.price:
-            raise ValueError(
-                f"Insufficient balance: have ${self._balance:.2f}, need ${product.price:.2f}"
-            )
-        self._selected = code
-        self.state = VendingMachineState.DISPENSING
-        return product.name
+        # TODO: Only valid in HAS_MONEY — call _require_state
+        # TODO: Raise ValueError for unknown code, out-of-stock product, or insufficient balance
+        # TODO: Store the chosen code in self._selected
+        # TODO: Transition to DISPENSING
+        # TODO: Return the product name
+        # HINT: Check self._balance < product.price to detect insufficient funds
+        pass
 
     def dispense(self) -> str:
-        self._require_state(VendingMachineState.DISPENSING)
-        product = self._products[self._selected]
-        self._balance -= product.price
-        product.quantity -= 1
-        name = product.name
-        self._selected = None
-        self.state = VendingMachineState.IDLE
-        self._check_out_of_stock()
-        return name
+        # TODO: Only valid in DISPENSING — call _require_state
+        # TODO: Subtract product price from self._balance
+        # TODO: Decrement product quantity by 1
+        # TODO: Clear self._selected (set back to None)
+        # TODO: Transition to IDLE
+        # TODO: Call _check_out_of_stock (last item may have just been dispensed)
+        # TODO: Return the product name
+        # HINT: Save the name before clearing self._selected
+        pass
 
     def refund(self) -> float:
-        self._require_state(VendingMachineState.HAS_MONEY)
-        amount = self._balance
-        self._balance = 0.0
-        self.state = VendingMachineState.IDLE
-        return amount
+        # TODO: Only valid in HAS_MONEY — call _require_state
+        # TODO: Save self._balance, reset it to 0.0, transition to IDLE, return saved amount
+        pass
 
     def restock(self, code: str, quantity: int) -> None:
-        if code not in self._products:
-            raise ValueError(f"Unknown product code: {code!r}")
-        self._products[code].quantity += quantity
-        if self.state == VendingMachineState.OUT_OF_STOCK:
-            self.state = VendingMachineState.IDLE
+        # TODO: Raise ValueError for unknown product code
+        # TODO: Add quantity to the product's current quantity
+        # TODO: If currently OUT_OF_STOCK, transition back to IDLE
+        pass
 
     @property
     def balance(self) -> float:
-        return self._balance
+        # TODO: Return the current balance
+        pass
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/behavioral/state/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

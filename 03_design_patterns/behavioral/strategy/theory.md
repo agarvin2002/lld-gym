@@ -1,89 +1,60 @@
 # Strategy Pattern
 
 ## What is it?
-Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from the clients that use it.
+Define a family of algorithms, wrap each one in its own class, and make them
+interchangeable. The object that uses them (the "context") doesn't care which
+one is plugged in — it just calls the same method.
+Swapping behaviour at runtime requires no changes to the context class.
 
-## Real-world analogy
-A GPS navigation app that can route by fastest time, shortest distance, or avoiding tolls. You switch strategies at runtime — the map UI doesn't change, only the routing algorithm does.
+## Analogy
+Swiggy lets you sort restaurants by Rating, Distance, or Delivery Time.
+The app screen (context) doesn't change. Only the sorting algorithm (strategy)
+swaps out when you pick a different option.
 
-## Why does it matter?
-Without Strategy, algorithm selection lives in the calling code as a chain of `if/elif` blocks. Adding a new algorithm means editing existing code (OCP violation). With Strategy, you add a class and inject it.
-
-## Python-specific notes
-- Define the strategy interface as an `ABC` with an `@abstractmethod`
-- Inject the strategy via `__init__` (constructor injection) — most testable
-- Can also use simple callables (functions) as lightweight strategies when the interface is a single method
-
-## When to use
-- You have multiple variants of an algorithm and want to swap them at runtime
-- You want to eliminate conditionals that select behaviour
-- You want to test algorithms independently from the code that uses them
-
-## When to avoid
-- Only one algorithm exists and no variation is expected
-- The variation is trivial (one line) — a callable/lambda is simpler than a full ABC
-
-## Quick example
+## Minimal code
 ```python
 from abc import ABC, abstractmethod
 
-class SortStrategy(ABC):
+class DiscountStrategy(ABC):
     @abstractmethod
-    def sort(self, data: list) -> list: ...
+    def apply(self, total: float) -> float: ...
 
-class BubbleSort(SortStrategy):
-    def sort(self, data: list) -> list:
-        data = list(data)
-        for i in range(len(data)):
-            for j in range(len(data) - i - 1):
-                if data[j] > data[j+1]:
-                    data[j], data[j+1] = data[j+1], data[j]
-        return data
+class NoDiscount(DiscountStrategy):
+    def apply(self, total: float) -> float:
+        return total
 
-class QuickSort(SortStrategy):
-    def sort(self, data: list) -> list:
-        if len(data) <= 1:
-            return data
-        pivot = data[len(data) // 2]
-        left = [x for x in data if x < pivot]
-        mid  = [x for x in data if x == pivot]
-        right = [x for x in data if x > pivot]
-        return self.sort(left) + mid + self.sort(right)
+class TenPercent(DiscountStrategy):
+    def apply(self, total: float) -> float:
+        return total * 0.9
 
-class Sorter:
-    def __init__(self, strategy: SortStrategy) -> None:
-        self._strategy = strategy
+class Order:
+    def __init__(self, total: float, discount: DiscountStrategy):
+        self.total = total
+        self._discount = discount
 
-    def set_strategy(self, strategy: SortStrategy) -> None:
-        self._strategy = strategy
+    def final_price(self) -> float:
+        return self._discount.apply(self.total)
 
-    def sort(self, data: list) -> list:
-        return self._strategy.sort(data)
+    def set_discount(self, d: DiscountStrategy) -> None:
+        self._discount = d
 
-# Usage
-sorter = Sorter(QuickSort())
-print(sorter.sort([5, 3, 1, 4, 2]))  # [1, 2, 3, 4, 5]
-
-sorter.set_strategy(BubbleSort())
-print(sorter.sort([5, 3, 1, 4, 2]))  # [1, 2, 3, 4, 5]
+order = Order(500.0, NoDiscount())
+print(order.final_price())         # 500.0
+order.set_discount(TenPercent())
+print(order.final_price())         # 450.0
 ```
 
-## Common mistakes
-- Putting the strategy selection logic back inside the context class (defeats the purpose)
-- Making strategies stateful — keep them stateless and reusable
-- Over-engineering: if you have two algorithms and they'll never change, just use a function
+## Real-world uses
+- Razorpay/Paytm: Credit Card, UPI, and Net Banking are swappable payment strategies
+- Flipkart: flat, percentage, and BOGO discount strategies on checkout
+- Rate limiters: Token Bucket vs Fixed Window vs Sliding Window — same interface, different algorithm
 
----
+## One mistake
+Putting the strategy selection logic back inside the context class. If `Order`
+has `if discount_type == "percent": ...` it defeats the entire point — you are
+back to a chain of conditionals.
 
-## LLD Problems That Use This Pattern
-
-| Problem | Strategy class | What it swaps |
-|---------|---------------|---------------|
-| [01 Parking Lot](../../../04_lld_problems/01_parking_lot/) | `FeeCalculator` | Hourly vs flat-rate vs daily pricing |
-| [07 Ride Sharing](../../../04_lld_problems/07_ride_sharing/) | Fare calculation by `VehicleType` | Per-km rate differs by vehicle class |
-| [08 Food Delivery](../../../04_lld_problems/08_food_delivery/) | `DeliveryFeeCalculator` | Distance-based fee calculation |
-| [11 Rate Limiter](../../../04_lld_problems/11_rate_limiter/) | `RateLimiter` ABC | Token Bucket vs Fixed Window vs Sliding Window |
-| [12 LRU Cache](../../../04_lld_problems/12_lru_cache/) | `LRUCache` / `LFUCache` | Different eviction policies |
-| [14 Logging Framework](../../../04_lld_problems/14_logging_framework/) | `LogFormatter` | Plain text vs JSON output |
-
-**Quickest example:** Rate Limiter — three algorithms, one interface, injected at construction. Start there.
+## What to do next
+See `examples/example1_sorting.py` for a classic sorting demo and
+`examples/example2_payment.py` for a checkout system with multiple payment methods.
+Then try `exercises/starter.py` — build a discount engine for an order system.

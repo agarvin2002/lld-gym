@@ -1,10 +1,12 @@
 """
 Iterator Pattern — Example 1: NumberRange
 
-Demonstrates three equivalent ways to iterate over a numeric range:
+Shows two equivalent ways to walk a numeric range:
   1. Class-based iterator with __iter__ / __next__
-  2. Generator function
-  3. Verification that both produce identical output
+  2. Generator function (Python's shortcut for the same protocol)
+
+Real-world use: Paginated API responses use the same idea — a cursor object
+fetches the next page only when asked, just like __next__ is called on demand.
 
 Run:
     python3 examples/example1_number_range.py
@@ -18,7 +20,7 @@ from __future__ import annotations
 # ---------------------------------------------------------------------------
 
 class NumberRangeIterator:
-    """Stateful iterator returned by NumberRange.__iter__."""
+    """Stateful cursor returned by NumberRange.__iter__."""
 
     def __init__(self, start: int, stop: int, step: int) -> None:
         self._current = start
@@ -26,8 +28,7 @@ class NumberRangeIterator:
         self._step = step
 
     def __iter__(self) -> NumberRangeIterator:
-        # An iterator must also be iterable (return itself).
-        return self
+        return self  # iterator is also iterable
 
     def __next__(self) -> int:
         if (self._step > 0 and self._current >= self._stop) or \
@@ -40,13 +41,11 @@ class NumberRangeIterator:
 
 class NumberRange:
     """
-    An iterable range of numbers from `start` (inclusive) to `stop`
-    (exclusive) with a configurable `step`.
+    Iterable range from start (inclusive) to stop (exclusive).
 
-    Unlike Python's built-in range(), this class wraps arbitrary numeric
-    types and demonstrates the iterable/iterator split: the collection
-    (NumberRange) and the cursor (NumberRangeIterator) are separate objects,
-    so multiple independent iterations can run simultaneously.
+    NumberRange is the *iterable*; NumberRangeIterator is the *iterator*.
+    Separating them means each for-loop gets a fresh cursor — you can loop
+    over the same NumberRange twice without resetting anything manually.
     """
 
     def __init__(self, start: int, stop: int, step: int = 1) -> None:
@@ -57,22 +56,19 @@ class NumberRange:
         self._step = step
 
     def __repr__(self) -> str:
-        return f"NumberRange(start={self._start}, stop={self._stop}, step={self._step})"
+        return f"NumberRange({self._start}, {self._stop}, step={self._step})"
 
     def __iter__(self) -> NumberRangeIterator:
-        # Each call creates a FRESH iterator — so you can loop twice.
+        # Each call returns a FRESH iterator — safe to loop twice.
         return NumberRangeIterator(self._start, self._stop, self._step)
 
 
 # ---------------------------------------------------------------------------
-# Approach 2: Generator function
+# Approach 2: Generator function (same result, less boilerplate)
 # ---------------------------------------------------------------------------
 
 def number_range_gen(start: int, stop: int, step: int = 1):
-    """
-    Equivalent generator function.  Python automatically gives generators
-    both __iter__ and __next__, making them iterators.
-    """
+    """Generator equivalent — Python gives it __iter__ and __next__ for free."""
     if step == 0:
         raise ValueError("step must not be zero")
     current = start
@@ -86,42 +82,20 @@ def number_range_gen(start: int, stop: int, step: int = 1):
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    print("=== NumberRange (class-based iterator) ===")
     nr = NumberRange(1, 10, 2)
-    print(f"Object: {nr!r}")
+    print("Class-based:", list(nr))          # [1, 3, 5, 7, 9]
+    print("Loop again :", list(nr))          # [1, 3, 5, 7, 9]  — still works
 
-    # for loop
-    print("for loop:", end=" ")
-    for n in nr:
-        print(n, end=" ")
-    print()
+    # Two independent cursors over the same collection
+    it1, it2 = iter(nr), iter(nr)
+    print(f"it1={next(it1)}, it2={next(it2)}, it1={next(it1)}")  # 1, 1, 3
 
-    # list() — proves iterable is re-usable (creates a new iterator each time)
-    print("list()  :", list(nr))
+    print("Generator  :", list(number_range_gen(1, 10, 2)))      # [1, 3, 5, 7, 9]
+    print("Countdown  :", list(NumberRange(10, 0, -2)))           # [10, 8, 6, 4, 2]
 
-    # Two simultaneous iterations share NO state
-    it1 = iter(nr)
-    it2 = iter(nr)
-    print(f"next(it1)={next(it1)}, next(it2)={next(it2)}, next(it1)={next(it1)}")
-
-    print()
-    print("=== number_range_gen (generator function) ===")
-    gen_values = list(number_range_gen(1, 10, 2))
-    print("list()  :", gen_values)
-
-    print()
-    print("=== Counting down (negative step) ===")
-    countdown = NumberRange(10, 0, -2)
-    print(f"Object: {countdown!r}")
-    print("list()  :", list(countdown))
-
-    print()
-    print("=== Identical output? ===")
-    class_output = list(NumberRange(0, 20, 3))
-    gen_output = list(number_range_gen(0, 20, 3))
-    print(f"Class  : {class_output}")
-    print(f"Generator: {gen_output}")
-    print(f"Match  : {class_output == gen_output}")
+    # Both approaches produce identical output
+    assert list(NumberRange(0, 20, 3)) == list(number_range_gen(0, 20, 3))
+    print("Class and generator match: True")
 
 
 if __name__ == "__main__":

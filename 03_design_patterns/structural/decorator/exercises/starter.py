@@ -1,12 +1,21 @@
 """
-Decorator Pattern - Exercise Starter
-======================================
-Task: Implement composable text formatters using the Decorator pattern.
+WHAT YOU'RE BUILDING
+====================
+You are building a set of composable text formatters using the Decorator pattern.
 
-Instructions:
-1. Read problem.md for the full requirements.
-2. Implement the classes below.
-3. Run tests.py to verify your solution.
+Start with a BaseFormatter that returns text unchanged.
+Then build decorator classes that each add one transformation:
+- BoldFormatter      → wraps text in **double asterisks**
+- ItalicFormatter    → wraps text in *single asterisks*
+- UpperCaseFormatter → converts text to UPPER CASE
+- TrimFormatter      → strips leading/trailing whitespace
+- PrefixFormatter    → prepends a fixed string
+
+Because every class shares the TextFormatter interface, you can stack them
+in any order: BoldFormatter(ItalicFormatter(UpperCaseFormatter(BaseFormatter())))
+
+Your job: implement all six classes below.
+TextFormatter (the interface) is already provided — do not modify it.
 """
 
 from __future__ import annotations
@@ -27,32 +36,33 @@ class TextFormatter(ABC):
 
 
 # ---------------------------------------------------------------------------
-# TODO: Implement BaseFormatter (leaf — no wrapping, returns text as-is)
+# TODO: Implement BaseFormatter (leaf — no wrapping)
 # ---------------------------------------------------------------------------
 
 class BaseFormatter(TextFormatter):
-    # TODO: implement format()
+    # TODO: Return text exactly as received — no changes
     pass
 
 
 # ---------------------------------------------------------------------------
-# TODO: Implement base decorator class
+# TODO: Implement the base decorator class
 # ---------------------------------------------------------------------------
 
 class TextFormatterDecorator(TextFormatter):
     """
     Base decorator.
-    - Stores a reference to a wrapped TextFormatter.
-    - Delegates format() to the wrapped instance by default.
-    - Concrete decorators override format() to add behavior.
+    Stores a reference to a wrapped TextFormatter.
+    Delegates format() to the wrapped instance.
+    Concrete decorators override format() to add their transformation.
     """
 
     def __init__(self, wrapped: TextFormatter) -> None:
-        # TODO: store wrapped
+        # TODO: Store the wrapped formatter as self._wrapped
         pass
 
     def format(self, text: str) -> str:
-        # TODO: delegate to self._wrapped
+        # TODO: Call and return self._wrapped.format(text)
+        # HINT: This is the default — subclasses call this first, then transform
         pass
 
 
@@ -61,18 +71,18 @@ class TextFormatterDecorator(TextFormatter):
 # ---------------------------------------------------------------------------
 
 class BoldFormatter(TextFormatterDecorator):
-    """Wraps formatted text in **double asterisks**."""
+    """Wraps the result of the inner formatter in **double asterisks**."""
 
     def format(self, text: str) -> str:
-        # TODO: get result from wrapped, then surround with **
+        # TODO: Get the result from the wrapped formatter, then return f"**{result}**"
         pass
 
 
 class ItalicFormatter(TextFormatterDecorator):
-    """Wraps formatted text in *single asterisks*."""
+    """Wraps the result of the inner formatter in *single asterisks*."""
 
     def format(self, text: str) -> str:
-        # TODO: get result from wrapped, then surround with *
+        # TODO: Get the result from the wrapped formatter, then return f"*{result}*"
         pass
 
 
@@ -80,7 +90,7 @@ class UpperCaseFormatter(TextFormatterDecorator):
     """Uppercases the result of the wrapped formatter."""
 
     def format(self, text: str) -> str:
-        # TODO: get result from wrapped, then upper()
+        # TODO: Get the result from the wrapped formatter, then call .upper() on it
         pass
 
 
@@ -88,7 +98,7 @@ class TrimFormatter(TextFormatterDecorator):
     """Strips leading/trailing whitespace from the wrapped result."""
 
     def format(self, text: str) -> str:
-        # TODO: get result from wrapped, then strip()
+        # TODO: Get the result from the wrapped formatter, then call .strip() on it
         pass
 
 
@@ -100,7 +110,8 @@ class PrefixFormatter(TextFormatterDecorator):
         self._prefix = prefix
 
     def format(self, text: str) -> str:
-        # TODO: get result from wrapped, then prepend self._prefix
+        # TODO: Get the result from the wrapped formatter, then return self._prefix + result
+        # HINT: The prefix was set in __init__ — just prepend it to whatever the inner formatter returns
         pass
 
 
@@ -129,3 +140,17 @@ if __name__ == "__main__":
 
     trim_bold = TrimFormatter(BoldFormatter(BaseFormatter()))
     print("Trim+Bold:", trim_bold.format("  spaced  "))
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/structural/decorator/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

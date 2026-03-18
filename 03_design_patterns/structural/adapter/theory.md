@@ -1,115 +1,51 @@
 # Adapter Pattern
 
-## 1. What Is It?
+## What is it?
+The Adapter pattern wraps an incompatible object so it looks compatible to the caller.
+You cannot change the object you are wrapping. So you create a thin class that translates calls.
+The caller only ever sees the interface it already understands.
 
-The Adapter pattern converts the interface of a class into another interface that clients expect. It allows classes to work together that otherwise couldn't because of incompatible interfaces.
+## Analogy
+A travel power adapter lets your Indian charger plug into a European socket.
+The charger has not changed. The wall socket has not changed.
+The adapter sits in between and makes the connection possible.
 
-In short: **wrap an incompatible object so it looks compatible to the caller.**
-
----
-
-## 2. Analogy: Power Adapter
-
-When you travel from the US to Europe, your US plug doesn't fit European sockets. A power adapter sits between your US device and the European socket — it doesn't change what your device does, it just makes the connection possible.
-
-- **Client**: your laptop
-- **Target Interface**: European socket (what the client expects)
-- **Adaptee**: US plug / your device
-- **Adapter**: the physical power adapter
-
----
-
-## 3. Use Cases
-
-- Integrating third-party libraries whose interface you can't change
-- Working with legacy code that would be too risky to modify
-- Unifying multiple APIs that serve the same purpose (e.g., multiple payment gateways)
-- Connecting new code to old systems during a gradual migration
-
----
-
-## 4. Object Adapter vs Class Adapter
-
-### Object Adapter (Composition — Preferred)
-The adapter holds a reference to the adaptee and delegates calls.
-
+## Minimal code
 ```python
-class Adapter(Target):
-    def __init__(self, adaptee: Adaptee):
-        self._adaptee = adaptee
+# Legacy class you cannot modify
+class OldSMS:
+    def send_sms(self, mobile: str, msg: str) -> None:
+        print(f"Sending '{msg}' to {mobile}")
 
-    def request(self) -> str:
-        return self._adaptee.specific_request()
-```
-
-**Pros**: Works even if adaptee is not subclassable; can adapt multiple adaptees.
-
-### Class Adapter (Multiple Inheritance)
-The adapter inherits from both the target interface and the adaptee.
-
-```python
-class Adapter(Target, Adaptee):
-    def request(self) -> str:
-        return self.specific_request()
-```
-
-**Pros**: No additional object needed; can override adaptee behavior.
-**Cons**: Tighter coupling; Python multiple inheritance can cause MRO issues; not available in languages without multiple inheritance.
-
-**Python allows both**, but object adapter via composition is almost always preferred.
-
----
-
-## 5. Quick Example: Payment API Adapter
-
-```python
-# Legacy payment system (cannot modify)
-class LegacyPaymentAPI:
-    def make_payment(self, card_num: str, amount_cents: int, cvv: str) -> bool:
-        print(f"Legacy: charging {amount_cents} cents to card ending {card_num[-4:]}")
-        return True
-
-# New interface the rest of your app expects
-class PaymentGateway:
-    def charge(self, amount_usd: float, card_details: dict) -> bool:
+# Interface your app expects
+class Notifier:
+    def notify(self, user_id: str, message: str) -> None:
         raise NotImplementedError
 
-# Adapter bridges old to new
-class LegacyPaymentAdapter(PaymentGateway):
-    def __init__(self, legacy_api: LegacyPaymentAPI):
-        self._api = legacy_api
+# Adapter bridges the two
+class SMSAdapter(Notifier):
+    def __init__(self, old_sms: OldSMS) -> None:
+        self._old = old_sms
 
-    def charge(self, amount_usd: float, card_details: dict) -> bool:
-        amount_cents = int(amount_usd * 100)
-        return self._api.make_payment(
-            card_details["number"],
-            amount_cents,
-            card_details["cvv"]
-        )
+    def notify(self, user_id: str, message: str) -> None:
+        self._old.send_sms(mobile=user_id, msg=message)
 
-# Client code only knows about PaymentGateway
-gateway = LegacyPaymentAdapter(LegacyPaymentAPI())
-gateway.charge(29.99, {"number": "4111111111111111", "cvv": "123"})
+# Client code only knows Notifier
+notifier = SMSAdapter(OldSMS())
+notifier.notify("9876543210", "Your Zomato order is on the way!")
 ```
 
----
+## Real-world uses
+- Wrapping a legacy payment gateway (like a bank's old SOAP API) behind a clean `charge()` interface
+- Adapting multiple third-party SMS providers (Twilio, MSG91, Exotel) so your app treats them identically
+- Connecting an old database access layer to a new repository interface during a migration
 
-## 6. Structure (UML)
+## One mistake
+Modifying the adaptee instead of writing an adapter.
+If you own the old code and can safely change it, do that.
+The Adapter pattern is for code you cannot or should not touch.
 
-```
-Client  -->  Target Interface
-                   ^
-                   |
-              Adapter
-                   |  (wraps)
-              Adaptee
-```
-
----
-
-## 7. When NOT to Use
-
-- When you control the adaptee and can simply change its interface
-- When the two interfaces are so different that the adapter becomes a full re-implementation
-- When you're adding adapters on top of adapters — this signals a deeper design problem
-- When a simple function or lambda can bridge the gap without a full class
+## What to do next
+- Read `examples/example1_legacy_adapter.py` to see a printer adapter in action.
+- Read `examples/example2_third_party_adapter.py` to see a third-party weather API adapted.
+- Then open `exercises/starter.py` and build your own adapter.

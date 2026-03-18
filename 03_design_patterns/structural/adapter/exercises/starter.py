@@ -1,12 +1,14 @@
 """
-Adapter Pattern - Exercise Starter
-===================================
-Task: Adapt LegacyUserRepository to the UserStore interface.
+WHAT YOU'RE BUILDING
+====================
+You are writing a UserRepositoryAdapter that makes the old UserRepository
+work with the new UserStore interface.
 
-Instructions:
-1. Read problem.md for the full requirements.
-2. Implement UserRepositoryAdapter below.
-3. Run tests.py to verify your solution.
+The old code (UserRepository) looks up users by integer ID.
+The new interface (UserStore) looks up users by string ID.
+Your adapter must bridge the two — converting types and delegating calls.
+
+You only need to implement UserRepositoryAdapter. Everything else is provided.
 """
 
 from __future__ import annotations
@@ -37,7 +39,6 @@ class UserRepository:
     """Legacy data access object — DO NOT MODIFY."""
 
     def __init__(self) -> None:
-        # Pre-populated in-memory store for the exercise
         self._users: dict[int, User] = {
             1: User(1, "Alice Smith",   "alice@example.com",  active=True),
             2: User(2, "Bob Jones",     "bob@example.com",    active=True),
@@ -70,7 +71,7 @@ class UserStore(ABC):
     def get_user(self, user_id: str) -> Optional[User]:
         """
         Fetch a single user by string ID.
-        Returns None if not found or if user_id is invalid.
+        Returns None if not found or if user_id is not a valid number.
         """
         ...
 
@@ -89,26 +90,21 @@ class UserStore(ABC):
 # ---------------------------------------------------------------------------
 
 class UserRepositoryAdapter(UserStore):
-    """
-    Adapt UserRepository to the UserStore interface.
-
-    Requirements:
-    - get_user(user_id: str) converts string ID to int, delegates to find_by_id
-    - get_user returns None for invalid (non-numeric) IDs without raising
-    - list_users(active_only=True) delegates to find_all_active()
-    - list_users(active_only=False) delegates to find_all()
-    """
+    """Wraps UserRepository and exposes the UserStore interface."""
 
     def __init__(self, repository: UserRepository) -> None:
-        # TODO: store the repository
+        # TODO: Store the repository as self._repo so the other methods can use it
         pass
 
     def get_user(self, user_id: str) -> Optional[User]:
-        # TODO: implement
+        # TODO: Convert user_id from str to int, then call self._repo.find_by_id()
+        # HINT: Use try/except ValueError to catch non-numeric strings like "abc".
+        #       Return None for those instead of raising.
         pass
 
     def list_users(self, active_only: bool = True) -> list[User]:
-        # TODO: implement
+        # TODO: Call self._repo.find_all_active() when active_only is True,
+        #       otherwise call self._repo.find_all()
         pass
 
 
@@ -117,7 +113,7 @@ class UserRepositoryAdapter(UserStore):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    repo = UserRepository()
+    repo  = UserRepository()
     store = UserRepositoryAdapter(repo)
 
     print("get_user('1'):", store.get_user("1"))
@@ -132,3 +128,17 @@ if __name__ == "__main__":
     print("\nlist_users(active_only=False) [all]:")
     for u in store.list_users(active_only=False):
         print(" ", u)
+
+
+# =============================================================================
+# HOW TO RUN TESTS
+# =============================================================================
+# Step 1 — set up the test runner (only needed once):
+#   python3 -m venv /tmp/lld_venv && /tmp/lld_venv/bin/pip install pytest -q
+#
+# Step 2 — run the tests for this exercise:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/structural/adapter/exercises/tests.py -v
+#
+# Run all 03_design_patterns exercises at once:
+#   /tmp/lld_venv/bin/pytest 03_design_patterns/ -v
+# =============================================================================

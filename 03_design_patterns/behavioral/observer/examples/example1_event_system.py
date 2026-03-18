@@ -1,18 +1,19 @@
 """
-Observer Pattern Example 1: Generic Event System
+Observer Pattern — Example 1: Generic Event System
 
 An EventEmitter that supports subscribing/unsubscribing to named events.
-Useful as a foundation for any event-driven system.
+Observers are plain callbacks (functions) — no ABC class needed.
+
+Real-world use: Node.js EventEmitter, browser addEventListener, and most
+backend frameworks (Django signals, Flask hooks) follow this exact structure.
+Zomato's order service emits "order.placed" and multiple microservices react.
 """
 from typing import Callable, Any
 from collections import defaultdict
 
 
 class EventEmitter:
-    """
-    Lightweight event emitter. Observers are callbacks (functions).
-    This is the Pythonic approach — no need for full Observer class.
-    """
+    """Subject: stores named event → [callbacks] mappings."""
 
     def __init__(self) -> None:
         self._listeners: dict[str, list[Callable]] = defaultdict(list)
@@ -26,26 +27,25 @@ class EventEmitter:
         try:
             self._listeners[event].remove(callback)
         except ValueError:
-            pass  # wasn't subscribed
+            pass  # wasn't subscribed — safe to ignore
 
     def emit(self, event: str, data: Any = None) -> None:
-        """Fire event — calls all registered callbacks."""
-        for callback in list(self._listeners[event]):  # copy to allow unsubscribe during emit
+        """Notify all callbacks for this event."""
+        # Copy list so a callback can safely unsubscribe itself during emit
+        for callback in list(self._listeners[event]):
             callback(data)
 
     def once(self, event: str, callback: Callable) -> None:
-        """Subscribe callback to fire only once."""
+        """Subscribe a callback that fires only once, then auto-unsubscribes."""
         def one_time_wrapper(data):
             callback(data)
             self.off(event, one_time_wrapper)
         self.on(event, one_time_wrapper)
 
 
-# ─── Usage Example ────────────────────────────────────────────────
+# ── Example: user service emits events; downstream services react ──────────────
 
 class UserService(EventEmitter):
-    """Service that emits events when users are created/deleted."""
-
     def __init__(self) -> None:
         super().__init__()
         self._users: dict[int, dict] = {}
@@ -89,14 +89,13 @@ if __name__ == "__main__":
     email_svc = EmailService()
     audit = AuditLogger()
 
-    # Subscribe
     service.on("user.created", email_svc.on_user_created)
     service.on("user.created", audit.on_user_created)
     service.on("user.deleted", audit.on_user_deleted)
 
     print("=== Creating users ===")
     alice = service.create_user("Alice", "alice@example.com")
-    bob = service.create_user("Bob", "bob@example.com")
+    service.create_user("Bob", "bob@example.com")
 
     print("\n=== Deleting user ===")
     service.delete_user(alice["id"])
